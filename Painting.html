@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Original Paintings Collection | Sarah Anderson Art</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: { primary: "#6366f1", secondary: "#a5b4fc" },
+            borderRadius: {
+              none: "0px",
+              sm: "4px",
+              DEFAULT: "8px",
+              md: "12px",
+              lg: "16px",
+              xl: "20px",
+              "2xl": "24px",
+              "3xl": "32px",
+              full: "9999px",
+              button: "8px",
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Pacifico&family=Montserrat:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css"
+    />
+    <style>
+      :where([class^="ri-"])::before { content: "\f3c2"; }
+      body {
+        font-family: 'Montserrat', sans-serif;
+      }
+      .artwork-card:hover .artwork-details {
+        opacity: 1;
+      }
+      .artwork-card:hover .artwork-image {
+        filter: brightness(0.9);
+      }
+      .nav-link {
+        position: relative;
+      }
+      .nav-link::after {
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 2px;
+        bottom: -4px;
+        left: 0;
+        background-color: #6366f1;
+        transition: width 0.3s ease;
+      }
+      .nav-link:hover::after {
+        width: 100%;
+      }
+      .nav-link.active::after {
+        width: 100%;
+      }
+      .price-range-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        background: #6366f1;
+        border-radius: 50%;
+        cursor: pointer;
+      }
+      .price-range-slider::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        background: #6366f1;
+        border-radius: 50%;
+        cursor: pointer;
+        border: none;
+      }
+      .price-range-slider::-webkit-slider-runnable-track {
+        height: 4px;
+        background: #e5e7eb;
+        border-radius: 2px;
+      }
+      .price-range-slider::-moz-range-track {
+        height: 4px;
+        background: #e5e7eb;
+        border-radius: 2px;
+      }
+      input[type="number"]::-webkit-inner-spin-button,
+      input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      .custom-checkbox {
+        display: inline-block;
+        position: relative;
+        cursor: pointer;
+        user-select: none;
+      }
+      .custom-checkbox input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        height: 0;
+        width: 0;
+      }
+      .checkmark {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 18px;
+        width: 18px;
+        background-color: #fff;
+        border: 2px solid #d1d5db;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+      }
+      .custom-checkbox:hover input ~ .checkmark {
+        border-color: #a5b4fc;
+      }
+      .custom-checkbox input:checked ~ .checkmark {
+        background-color: #6366f1;
+        border-color: #6366f1;
+      }
+      .checkmark:after {
+        content: "";
+        position: absolute;
+        display: none;
+      }
+      .custom-checkbox input:checked ~ .checkmark:after {
+        display: block;
+      }
+      .custom-checkbox .checkmark:after {
+        left: 5px;
+        top: 1px;
+        width: 6px;
+        height: 10px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+      }
+      .custom-select {
+        position: relative;
+        display: inline-block;
+      }
+      .custom-select select {
+        display: none;
+      }
+      .select-selected {
+        background-color: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 8px 16px;
+        cursor: pointer;
+        user-select: none;
+      }
+      .select-selected:after {
+        position: absolute;
+        content: "";
+        top: 14px;
+        right: 16px;
+        width: 8px;
+        height: 8px;
+        border: solid #6b7280;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+      }
+      .select-selected.select-arrow-active:after {
+        transform: rotate(-135deg);
+        top: 18px;
+      }
+      .select-items {
+        position: absolute;
+        background-color: #fff;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 99;
+        margin-top: 4px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        max-height: 250px;
+        overflow-y: auto;
+      }
+      .select-hide {
+        display: none;
+      }
+      .select-items div {
+        padding: 10px 16px;
+        cursor: pointer;
+        user-select: none;
+      }
+      .select-items div:hover {
+        background-color: #f3f4f6;
+      }
+      .same-as-selected {
+        background-color: #f3f4f6;
+      }
+    </style>
+  </head>
+  <body class="bg-white">
+    <!-- Navigation Bar -->
+    <header class="fixed top-0 left-0 right-0 bg-white shadow-sm z-50">
+      <div
+        class="container mx-auto px-6 py-4 flex items-center justify-between"
+      >
+        <div class="flex items-center">
+          <a
+            href="https://readdy.ai/home/c4a01121-4d15-46d6-a775-66ddbb8ccbc8/47ce33c1-a097-4305-9f4f-d8fbd1882374"
+            data-readdy="true"
+            class="text-3xl font-['Pacifico'] text-primary mr-12"
+            >logo</a
+          >
+          <nav class="hidden md:flex space-x-8">
+            <a
+              href="https://readdy.ai/home/c4a01121-4d15-46d6-a775-66ddbb8ccbc8/47ce33c1-a097-4305-9f4f-d8fbd1882374"
+              data-readdy="true"
+              class="nav-link text-gray-600 hover:text-gray-800 transition-colors"
+              >Home</a
+            >
+            <a href="#" class="nav-link active text-gray-800 font-medium"
+              >Paintings</a
+            >
+            <a
+              href="#"
+              class="nav-link text-gray-600 hover:text-gray-800 transition-colors"
+              >Tote Bags</a
+            >
+            <a
+              href="#"
+              class="nav-link text-gray-600 hover:text-gray-800 transition-colors"
+              >Crafts</a
+            >
+            <a
+              href="#"
+              class="nav-link text-gray-600 hover:text-gray-800 transition-colors"
+              >About</a
+            >
+          </nav>
+        </div>
+        <div class="flex items-center space-x-6">
+          <div class="relative">
+            <div class="flex items-center bg-gray-50 rounded-full px-4 py-2">
+              <input
+                type="text"
+                placeholder="Search art..."
+                class="bg-transparent border-none text-sm search-input w-40"
+              />
+              <div
+                class="w-8 h-8 flex items-center justify-center text-gray-500"
+              >
+                <i class="ri-search-line"></i>
+              </div>
+            </div>
+          </div>
+          <div class="relative">
+            <div
+              class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors"
+            >
+              <i class="ri-shopping-cart-line"></i>
+            </div>
+            <div
+              class="absolute cart-badge flex items-center justify-center w-5 h-5 rounded-full bg-primary text-white text-xs font-bold"
+            >
+              3
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Collection Header -->
+    <section class="pt-32 pb-8 bg-white">
+      <div class="container mx-auto px-6">
+        <div class="flex items-center mb-4">
+          <a
+            href="https://readdy.ai/home/c4a01121-4d15-46d6-a775-66ddbb8ccbc8/47ce33c1-a097-4305-9f4f-d8fbd1882374"
+            data-readdy="true"
+            class="flex items-center text-gray-600 hover:text-primary transition-colors"
+          >
+            <i class="ri-arrow-left-line mr-2"></i>
+            <span>Back to Home</span>
+          </a>
+        </div>
+        <div
+          class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8"
+        >
+          <div>
+            <h1 class="text-4xl font-bold text-gray-900 mb-3">
+              Original Paintings
+            </h1>
+            <p class="text-gray-600 max-w-2xl">
+              Vibrant abstract and nature-inspired artwork for your space. Each
+              piece is handcrafted with premium materials and attention to
+              detail, bringing unique artistic expression to your home or
+              office.
+            </p>
+          </div>
+          <div class="text-gray-600">
+            <span>24 artworks</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filter Section -->
+    <section
+      class="py-6 border-t border-b border-gray-200 bg-white sticky top-16 z-40"
+    >
+      <div class="container mx-auto px-6">
+        <div
+          class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+        >
+          <div class="flex flex-wrap items-center gap-4">
+            <div class="relative">
+              <button
+                id="priceFilterBtn"
+                class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-button text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
+              >
+                <span>Price Range</span>
+                <i class="ri-arrow-down-s-line"></i>
+              </button>
+              <div
+                id="priceFilterDropdown"
+                class="hidden absolute left-0 top-full mt-2 bg-white shadow-lg rounded-lg p-4 w-72 z-50"
+              >
+                <div class="mb-4">
+                  <div class="flex justify-between mb-2">
+                    <span class="text-sm text-gray-600"
+                      >Price Range: $<span id="minPriceDisplay">0</span> -
+                      $<span id="maxPriceDisplay">5000</span></span
+                    >
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="5000"
+                    value="5000"
+                    class="price-range-slider w-full"
+                    id="priceRangeSlider"
+                  />
+                </div>
+                <div class="flex gap-3">
+                  <div class="w-1/2">
+                    <label class="block text-sm text-gray-600 mb-1"
+                      >Min ($)</label
+                    >
+                    <input
+                      type="number"
+                      id="minPrice"
+                      value="0"
+                      min="0"
+                      max="5000"
+                      class="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                    />
+                  </div>
+                  <div class="w-1/2">
+                    <label class="block text-sm text-gray-600 mb-1"
+                      >Max ($)</label
+                    >
+                    <input
+                      type="number"
+                      id="maxPrice"
+                      value="5000"
+                      min="0"
+                      max="5000"
+                      class="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                    />
+                  </div>
+                </div>
+                <div class="flex justify-end mt-4">
+                  <button
+                    id="applyPriceFilter"
+                    class="bg-primary text-white px-4 py-2 rounded-button text-sm hover:bg-opacity-90 transition-colors whitespace-nowrap"
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="relative">
+              <button
+                id="styleFilterBtn"
+                class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-button text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
+              >
+                <span>Style</span>
+                <i class="ri-arrow-down-s-line"></i>
+              </button>
+              <div
+                id="styleFilterDropdown"
+                class="hidden absolute left-0 top-full mt-2 bg-white shadow-lg rounded-lg p-4 w-56 z-50"
+              >
+                <div class="space-y-3">
+                  <label class="custom-checkbox flex items-center gap-3">
+                    <input type="checkbox" value="Abstract" />
+                    <span class="checkmark"></span>
+                    <span class="text-gray-700">Abstract</span>
+                  </label>
+                  <label class="custom-checkbox flex items-center gap-3">
+                    <input type="checkbox" value="Landscape" />
+                    <span class="checkmark"></span>
+                    <span class="text-gray-700">Landscape</span>
+                  </label>
+                  <label class="custom-checkbox flex items-center gap-3">
+                    <input type="checkbox" value="Portrait" />
+                    <span class="checkmark"></span>
+                    <span class="text-gray-700">Portrait</span>
+                  </label>
+                  <label class="custom-checkbox flex items-center gap-3">
+                    <input type="checkbox" value="Impressionist" />
+                    <span class="checkmark"></span>
+                    <span class="text-gray-700">Impressionist</span>
+                  </label>
+                  <label class="custom-checkbox flex items-center gap-3">
+                    <input type="checkbox" value="Surrealist" />
+                    <span class="checkmark"></span>
+                    <span class="text-gray-700">Surrealist</span>
+                  </label>
+                  <label class="custom-checkbox flex items-center gap-3">
+                    <input type="checkbox" value="Minimalist" />
+                    <span class="checkmark"></span>
+                    <span class="text-gray-700">Minimalist</span>
+                  </label>
+                </div>
+                <div class="flex justify-end mt-4">
+                  <button
+                    id="applyStyleFilter"
+                    class="bg-primary text-white px-4 py-2 rounded-button text-sm hover:bg-opacity-90 transition-colors whitespace-nowrap"
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="relative">
+              <button
+                id="sizeFilterBtn"
+                class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-button text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
+              >
+                <span>Size</span>
+                <i class="ri-arrow-down-s-line"></i>
+              </button>
+              <div
+                id="sizeFilterDropdown"
+                class="hidden absolute left-0 top-full mt-2 bg-white shadow-lg rounded-lg p-4 w-56 z-50"
+              >
+                <div class="space-y-3">
+                  <label class="custom-checkbox flex items-center gap-3">
+                    <input type="checkbox" value="Small" />
+                    <span class="checkmark"></span>
+                    <span class="text-gray-700">Small (under 20")</span>
+                  </label>
+                  <label class="custom-checkbox flex items-center gap-3">
+                    <input type="checkbox" value="Medium" />
+                    <span class="checkmark"></span>
+                    <span class="text-gray-700">Medium (20-36")</span>
+                  </label>
+                  <label class="custom-checkbox flex items-center gap-3">
+                    <input type="checkbox" value="Large" />
+                    <span class="checkmark"></span>
+                    <span class="text-gray-700">Large (over 36")</span>
+                  </label>
+                </div>
+                <div class="flex justify-end mt-4">
+                  <button
+                    id="applySizeFilter"
+                    class="bg-primary text-white px-4 py-2 rounded-button text-sm hover:bg-opacity-90 transition-colors whitespace-nowrap"
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="flex items-center gap-2 px-4 py-2 bg-primary bg-opacity-10 rounded-full text-primary text-sm"
+            >
+              <i class="ri-filter-3-line"></i>
+              <span>Filters Applied (3)</span>
+              <button class="ml-1">
+                <i class="ri-close-line"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="relative">
+            <button
+              id="sortByBtn"
+              class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-button text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
+            >
+              <span>Sort by: Newest First</span>
+              <i class="ri-arrow-down-s-line"></i>
+            </button>
+            <div
+              id="sortByDropdown"
+              class="hidden absolute right-0 top-full mt-2 bg-white shadow-lg rounded-lg w-48 z-50"
+            >
+              <div class="py-1">
+                <button
+                  class="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Newest First
+                </button>
+                <button
+                  class="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Price: Low to High
+                </button>
+                <button
+                  class="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Price: High to Low
+                </button>
+                <button
+                  class="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Most Popular
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Artwork Grid -->
+    <section class="py-12 bg-white">
+      <div class="container mx-auto px-6">
+        <div
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+        >
+          <!-- Artwork 1 -->
+          <div
+            class="artwork-card bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div class="relative">
+              <img
+                src="https://readdy.ai/api/search-image?query=abstract%2520painting%2520with%2520vibrant%2520blue%2520and%2520red%2520colors%252C%2520modern%2520art%2520style%252C%2520high-quality%2520fine%2520art%252C%2520professional%2520lighting%252C%2520gallery%2520quality%252C%2520extremely%2520detailed%252C%2520clean%2520composition%252C%2520perfect%2520for%2520a%2520luxury%2520art%2520gallery&width=500&height=500&seq=101&orientation=squarish"
+                alt="Abstract Rhythm"
+                class="artwork-image w-full h-80 object-cover object-top transition-all duration-300"
+              />
+              <div
+                class="artwork-details absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 transition-opacity duration-300"
+              >
+                <button
+                  class="bg-white text-gray-900 px-6 py-2 rounded-button font-medium hover:bg-gray-100 transition-colors whitespace-nowrap"
+                >
+                  Quick View
+                </button>
+              </div>
+            </div>
+            <div class="p-4">
+              <h3 class="text-lg font-semibold text-gray-900">
+                Abstract Rhythm
+              </h3>
+              <p class="text-gray-600 text-sm mb-2">by Alexandra Reynolds</p>
+              <div class="flex justify-between items-center">
+                <span class="text-primary font-medium">$2,450</span>
+                <button
+                  class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-700 hover:bg-primary hover:text-white transition-colors"
+                >
+                  <i class="ri-shopping-cart-line"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Artwork 2 -->
+          <div
+            class="artwork-card bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div class="relative">
+              <img
+                src="https://readdy.ai/api/search-image?query=minimalist%2520landscape%2520painting%2520with%2520soft%2520pastel%2520colors%252C%2520serene%2520nature%2520scene%252C%2520high-quality%2520fine%2520art%252C%2520professional%2520lighting%252C%2520gallery%2520quality%252C%2520extremely%2520detailed%252C%2520clean%2520composition%252C%2520perfect%2520for%2520a%2520luxury%2520art%2520gallery&width=500&height=500&seq=102&orientation=squarish"
+                alt="Serene Horizon"
+                class="artwork-image w-full h-80 object-cover object-top transition-all duration-300"
+              />
+              <div
+                class="artwork-details absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 transition-opacity duration-300"
+              >
+                <button
+                  class="bg-white text-gray-900 px-6 py-2 rounded-button font-medium hover:bg-gray-100 transition-colors whitespace-nowrap"
+                >
+                  Quick View
+                </button>
+              </div>
+            </div>
+            <div class="p-4">
+              <h3 class="text-lg font-semibold text-gray-900">
+                Serene Horizon
+              </h3>
+              <p class="text-gray-600 text-sm mb-2">by Marcus Chen</p>
+              <div class="flex justify-between items-center">
+                <span class="text-primary font-medium">$1,850</span>
+                <button
+                  class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-700 hover:bg-primary hover:text-white transition-colors"
+                >
+                  <i class="ri-shopping-cart-line"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Artwork 3 -->
+          <div
+            class="artwork-card bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div class="relative">
+              <img
+                src="https://readdy.ai/api/search-image?query=modern%2520portrait%2520painting%2520with%2520bold%2520colors%252C%2520expressive%2520female%2520face%252C%2520high-quality%2520fine%2520art%252C%2520professional%2520lighting%252C%2520gallery%2520quality%252C%2520extremely%2520detailed%252C%2520clean%2520composition%252C%2520perfect%2520for%2520a%2520luxury%2520art%2520gallery&width=500&height=500&seq=103&orientation=squarish"
+                alt="Contemplation"
+                class="artwork-image w-full h-80 object-cover object-top transition-all duration-300"
+              />
+              <div
+                class="artwork-details absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 transition-opacity duration-300"
+              >
+                <button
+                  class="bg-white text-gray-900 px-6 py-2 rounded-button font-medium hover:bg-gray-100 transition-colors whitespace-nowrap"
+                >
+                  Quick View
+                </button>
+              </div>
+            </div>
+            <div class="p-4">
+              <h3 class="text-lg font-semibold text-gray-900">Contemplation</h3>
+              <p class="text-gray-600 text-sm mb-2">by Sophia Nguyen</p>
+              <div class="flex justify-between items-center">
+                <span class="text-primary font-medium">$3,200</span>
+                <button
+                  class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-700 hover:bg-primary hover:text-white transition-colors"
+                >
+                  <i class="ri-shopping-cart-line"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Artwork 4 -->
+          <div
+            class="artwork-card bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div class="relative">
+              <img
+                src="https://readdy.ai/api/search-image?query=geometric%2520abstract%2520painting%2520with%2520vibrant%2520yellow%2520and%2520purple%2520colors%252C%2520modern%2520art%2520style%252C%2520high-quality%2520fine%2520art%252C%2520professional%2520lighting%252C%2520gallery%2520quality%252C%2520extremely%2520detailed%252C%2520clean%2520composition%252C%2520perfect%2520for%2520a%2520luxury%2520art%2520gallery&width=500&height=500&seq=104&orientation=squarish"
+                alt="Geometric Harmony"
+                class="artwork-image w-full h-80 object-cover object-top transition-all duration-300"
+              />
+              <div
+                class="artwork-details absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 transition-opacity duration-300"
+              >
+                <button
+                  class="bg-white text-gray-900 px-6 py-2 rounded-button font-medium hover:bg-gray-100 transition-colors whitespace-nowrap"
+                >
+                  Quick View
+                </button>
+              </div>
+            </div>
+            <div class="p-4">
+              <h3 class="text-lg font-semibold text-gray-900">
+                Geometric Harmony
+              </h3>
+              <p class="text-gray-600 text-sm mb-2">by Jonathan Black</p>
+              <div class="flex justify-between items-center">
+                <span class="text-primary font-medium">$1,750</span>
+                <button
+                  class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-700 hover:bg-primary hover:text-white transition-colors"
+                >
+                  <i class="ri-shopping-cart-line"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Artwork 5 -->
+          <div
+            class="artwork-card bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div class="relative">
+              <img
+                src="https://readdy.ai/api/search-image?query=impressionist%2520cityscape%2520painting%2520with%2520soft%2520colors%252C%2520urban%2520scene%2520at%2520dusk%252C%2520high-quality%2520fine%2520art%252C%2520professional%2520lighting%252C%2520gallery%2520quality%252C%2520extremely%2520detailed%252C%2520clean%2520composition%252C%2520perfect%2520for%2520a%2520luxury%2520art%2520gallery&width=500&height=500&seq=105&orientation=squarish"
+                alt="Urban Twilight"
+                class="artwork-image w-full h-80 object-cover object-top transition-all duration-300"
+              />
+              <div
+                class="artwork-details absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 transition-opacity duration-300"
+              >
+                <button
+                  class="bg-white text-gray-900 px-6 py-2 rounded-button font-medium hover:bg-gray-100 transition-colors whitespace-nowrap"
+                >
+                  Quick View
+                </button>
+              </div>
+            </div>
+            <div class="p-4">
+              <h3 class="text-lg font-semibold text-gray-900">
+                Urban Twilight
+              </h3>
+              <p class="text-gray-600 text-sm mb-2">by Olivia Parker</p>
+              <div class="flex justify-between items-center">
+                <span class="text-primary font-medium">$2,100</span>
+                <button
+                  class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-700 hover:bg-primary hover:text-white transition-colors"
+                >
+                  <i class="ri-shopping-cart-line"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Artwork 6 -->
+          <div
+            class="artwork-card bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div class="relative">
+              <img
+                src="https://readdy.ai/api/search-image?query=surrealist%2520painting%2520with%2520dreamlike%2520elements%252C%2520vibrant%2520colors%252C%2520high-quality%2520fine%2520art%252C%2520professional%2520lighting%252C%2520gallery%2520quality%252C%2520extremely%2520detailed%252C%2520clean%2520composition%252C%2520perfect%2520for%2520a%2520luxury%2520art%2520gallery&width=500&height=500&seq=106&orientation=squarish"
+                alt="Dream Sequence"
+                class="artwork-image w-full h-80 object-cover object-top transition-all duration-300"
+              />
+              <div
+                class="artwork-details absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 transition-opacity duration-300"
+              >
+                <button
+                  class="bg-white text-gray-900 px-6 py-2 rounded-button font-medium hover:bg-gray-100 transition-colors whitespace-nowrap"
+                >
+                  Quick View
+                </button>
+              </div>
+            </div>
+            <div class="p-4">
+              <h3 class="text-lg font-semibold text-gray-900">
+                Dream Sequence
+              </h3>
+              <p class="text-gray-600 text-sm mb-2">by Gabriel Moreno</p>
+              <div class="flex justify-between items-center">
+                <span class="text-primary font-medium">$2,850</span>
+                <button
+                  class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-700 hover:bg-primary hover:text-white transition-colors"
+                >
+                  <i class="ri-shopping-cart-line"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Artwork 7 -->
+          <div
+            class="artwork-card bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div class="relative">
+              <img
+                src="https://readdy.ai/api/search-image?query=abstract%2520expressionist%2520painting%2520with%2520bold%2520brushstrokes%2520and%2520vibrant%2520red%2520and%2520orange%2520colors%252C%2520high-quality%2520fine%2520art%252C%2520professional%2520lighting%252C%2520gallery%2520quality%252C%2520extremely%2520detailed%252C%2520clean%2520composition%252C%2520perfect%2520for%2520a%2520luxury%2520art%2520gallery&width=500&height=500&seq=107&orientation=squarish"
+                alt="Passionate Expression"
+                class="artwork-image w-full h-80 object-cover object-top transition-all duration-300"
+              />
+              <div
+                class="artwork-details absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 transition-opacity duration-300"
+              >
+                <button
+                  class="bg-white text-gray-900 px-6 py-2 rounded-button font-medium hover:bg-gray-100 transition-colors whitespace-nowrap"
+                >
+                  Quick View
+                </button>
+              </div>
+            </div>
+            <div class="p-4">
+              <h3 class="text-lg font-semibold text-gray-900">
+                Passionate Expression
+              </h3>
+              <p class="text-gray-600 text-sm mb-2">by Rebecca Torres</p>
+              <div class="flex justify-between items-center">
+                <span class="text-primary font-medium">$2,350</span>
+                <button
+                  class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-700 hover:bg-primary hover:text-white transition-colors"
+                >
+                  <i class="ri-shopping-cart-line"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Artwork 8 -->
+          <div
+            class="artwork-card bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div class="relative">
+              <img
+                src="https://readdy.ai/api/search-image?query=minimalist%2520geometric%2520painting%2520with%2520clean%2520lines%2520and%2520muted%2520colors%252C%2520high-quality%2520fine%2520art%252C%2520professional%2520lighting%252C%2520gallery%2520quality%252C%2520extremely%2520detailed%252C%2520clean%2520composition%252C%2520perfect%2520for%2520a%2520luxury%2520art%2520gallery&width=500&height=500&seq=108&orientation=squarish"
+                alt="Geometric Balance"
+                class="artwork-image w-full h-80 object-cover object-top transition-all duration-300"
+              />
+              <div
+                class="artwork-details absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 transition-opacity duration-300"
+              >
+                <button
+                  class="bg-white text-gray-900 px-6 py-2 rounded-button font-medium hover:bg-gray-100 transition-colors whitespace-nowrap"
+                >
+                  Quick View
+                </button>
+              </div>
+            </div>
+            <div class="p-4">
+              <h3 class="text-lg font-semibold text-gray-900">
+                Geometric Balance
+              </h3>
+              <p class="text-gray-600 text-sm mb-2">by Thomas Wilson</p>
+              <div class="flex justify-between items-center">
+                <span class="text-primary font-medium">$1,650</span>
+                <button
+                  class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-700 hover:bg-primary hover:text-white transition-colors"
+                >
+                  <i class="ri-shopping-cart-line"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Artwork 9 -->
+          <div
+            class="artwork-card bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div class="relative">
+              <img
+                src="https://readdy.ai/api/search-image?query=impressionist%2520landscape%2520painting%2520with%2520soft%2520colors%2520of%2520a%2520meadow%2520at%2520sunset%252C%2520high-quality%2520fine%2520art%252C%2520professional%2520lighting%252C%2520gallery%2520quality%252C%2520extremely%2520detailed%252C%2520clean%2520composition%252C%2520perfect%2520for%2520a%2520luxury%2520art%2520gallery&width=500&height=500&seq=109&orientation=squarish"
+                alt="Meadow Sunset"
+                class="artwork-image w-full h-80 object-cover object-top transition-all duration-300"
+              />
+              <div
+                class="artwork-details absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 transition-opacity duration-300"
+              >
+                <button
+                  class="bg-white text-gray-900 px-6 py-2 rounded-button font-medium hover:bg-gray-100 transition-colors whitespace-nowrap"
+                >
+                  Quick View
+                </button>
+              </div>
+            </div>
+            <div class="p-4">
+              <h3 class="text-lg font-semibold text-gray-900">Meadow Sunset</h3>
+              <p class="text-gray-600 text-sm mb-2">by Catherine Hughes</p>
+              <div class="flex justify-between items-center">
+                <span class="text-primary font-medium">$2,750</span>
+                <button
+                  class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-700 hover:bg-primary hover:text-white transition-colors"
+                >
+                  <i class="ri-shopping-cart-line"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Artwork 10 -->
+          <div
+            class="artwork-card bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div class="relative">
+              <img
+                src="https://readdy.ai/api/search-image?query=abstract%2520fluid%2520painting%2520with%2520flowing%2520blue%2520and%2520teal%2520colors%252C%2520high-quality%2520fine%2520art%252C%2520professional%2520lighting%252C%2520gallery%2520quality%252C%2520extremely%2520detailed%252C%2520clean%2520composition%252C%2520perfect%2520for%2520a%2520luxury%2520art%2520gallery&width=500&height=500&seq=110&orientation=squarish"
+                alt="Ocean Currents"
+                class="artwork-image w-full h-80 object-cover object-top transition-all duration-300"
+              />
+              <div
+                class="artwork-details absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 transition-opacity duration-300"
+              >
+                <button
+                  class="bg-white text-gray-900 px-6 py-2 rounded-button font-medium hover:bg-gray-100 transition-colors whitespace-nowrap"
+                >
+                  Quick View
+                </button>
+              </div>
+            </div>
+            <div class="p-4">
+              <h3 class="text-lg font-semibold text-gray-900">
+                Ocean Currents
+              </h3>
+              <p class="text-gray-600 text-sm mb-2">by Nathan Brooks</p>
+              <div class="flex justify-between items-center">
+                <span class="text-primary font-medium">$1,950</span>
+                <button
+                  class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-700 hover:bg-primary hover:text-white transition-colors"
+                >
+                  <i class="ri-shopping-cart-line"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Artwork 11 -->
+          <div
+            class="artwork-card bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div class="relative">
+              <img
+                src="https://readdy.ai/api/search-image?query=modern%2520still%2520life%2520painting%2520with%2520vibrant%2520colors%2520of%2520fruit%2520and%2520flowers%252C%2520high-quality%2520fine%2520art%252C%2520professional%2520lighting%252C%2520gallery%2520quality%252C%2520extremely%2520detailed%252C%2520clean%2520composition%252C%2520perfect%2520for%2520a%2520luxury%2520art%2520gallery&width=500&height=500&seq=111&orientation=squarish"
+                alt="Vibrant Still Life"
+                class="artwork-image w-full h-80 object-cover object-top transition-all duration-300"
+              />
+              <div
+                class="artwork-details absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 transition-opacity duration-300"
+              >
+                <button
+                  class="bg-white text-gray-900 px-6 py-2 rounded-button font-medium hover:bg-gray-100 transition-colors whitespace-nowrap"
+                >
+                  Quick View
+                </button>
+              </div>
+            </div>
+            <div class="p-4">
+              <h3 class="text-lg font-semibold text-gray-900">
+                Vibrant Still Life
+              </h3>
+              <p class="text-gray-600 text-sm mb-2">by Elena Martinez</p>
+              <div class="flex justify-between items-center">
+                <span class="text-primary font-medium">$1,850</span>
+                <button
+                  class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-700 hover:bg-primary hover:text-white transition-colors"
+                >
+                  <i class="ri-shopping-cart-line"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Artwork 12 -->
+          <div
+            class="artwork-card bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div class="relative">
+              <img
+                src="https://readdy.ai/api/search-image?query=abstract%2520painting%2520with%2520gold%2520leaf%2520accents%2520and%2520deep%2520blue%2520tones%252C%2520high-quality%2520fine%2520art%252C%2520professional%2520lighting%252C%2520gallery%2520quality%252C%2520extremely%2520detailed%252C%2520clean%2520composition%252C%2520perfect%2520for%2520a%2520luxury%2520art%2520gallery&width=500&height=500&seq=112&orientation=squarish"
+                alt="Golden Depths"
+                class="artwork-image w-full h-80 object-cover object-top transition-all duration-300"
+              />
+              <div
+                class="artwork-details absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 transition-opacity duration-300"
+              >
+                <button
+                  class="bg-white text-gray-900 px-6 py-2 rounded-button font-medium hover:bg-gray-100 transition-colors whitespace-nowrap"
+                >
+                  Quick View
+                </button>
+              </div>
+            </div>
+            <div class="p-4">
+              <h3 class="text-lg font-semibold text-gray-900">Golden Depths</h3>
+              <p class="text-gray-600 text-sm mb-2">by Victoria Chang</p>
+              <div class="flex justify-between items-center">
+                <span class="text-primary font-medium">$3,450</span>
+                <button
+                  class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-700 hover:bg-primary hover:text-white transition-colors"
+                >
+                  <i class="ri-shopping-cart-line"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-12 flex justify-center">
+          <nav class="flex items-center space-x-2">
+            <button
+              class="w-10 h-10 flex items-center justify-center rounded-full border border-gray-300 text-gray-600 hover:border-gray-400 transition-colors"
+            >
+              <i class="ri-arrow-left-s-line"></i>
+            </button>
+            <button
+              class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white"
+            >
+              1
+            </button>
+            <button
+              class="w-10 h-10 flex items-center justify-center rounded-full border border-gray-300 text-gray-600 hover:border-gray-400 transition-colors"
+            >
+              2
+            </button>
+            <button
+              class="w-10 h-10 flex items-center justify-center rounded-full border border-gray-300 text-gray-600 hover:border-gray-400 transition-colors"
+            >
+              3
+            </button>
+            <span class="text-gray-500">...</span>
+            <button
+              class="w-10 h-10 flex items-center justify-center rounded-full border border-gray-300 text-gray-600 hover:border-gray-400 transition-colors"
+            >
+              8
+            </button>
+            <button
+              class="w-10 h-10 flex items-center justify-center rounded-full border border-gray-300 text-gray-600 hover:border-gray-400 transition-colors"
+            >
+              <i class="ri-arrow-right-s-line"></i>
+            </button>
+          </nav>
+        </div>
+      </div>
+    </section>
+
+    <!-- You Might Also Like -->
+    <section class="py-16 bg-gray-50">
+      <div class="container mx-auto px-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-8">
+          You Might Also Like
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <!-- Related Item 1 -->
+          <div
+            class="artwork-card bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div class="relative">
+              <img
+                src="https://readdy.ai/api/search-image?query=hand-painted%2520canvas%2520tote%2520bag%2520with%2520abstract%2520design%252C%2520vibrant%2520colors%252C%2520high-quality%2520product%2520photography%252C%2520professional%2520lighting%252C%2520clean%2520background%252C%2520extremely%2520detailed%252C%2520perfect%2520for%2520a%2520luxury%2520art%2520gallery&width=500&height=500&seq=113&orientation=squarish"
+                alt="Abstract Tote Bag"
+                class="artwork-image w-full h-64 object-cover object-top transition-all duration-300"
+              />
+              <div
+                class="artwork-details absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 transition-opacity duration-300"
+              >
+                <button
+                  class="bg-white text-gray-900 px-6 py-2 rounded-button font-medium hover:bg-gray-100 transition-colors whitespace-nowrap"
+                >
+                  Quick View
+                </button>
+              </div>
+            </div>
+            <div class="p-4">
+              <h3 class="text-lg font-semibold text-gray-900">
+                Abstract Tote Bag
+              </h3>
+              <p class="text-gray-600 text-sm mb-2">by Sarah Anderson</p>
+              <div class="flex justify-between items-center">
+                <span class="text-primary font-medium">$85</span>
+                <button
+                  class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-700 hover:bg-primary hover:text-white transition-colors"
+                >
+                  <i class="ri-shopping-cart-line"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Related Item 2 -->
+          <div
+            class="artwork-card bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div class="relative">
+              <img
+                src="https://readdy.ai/api/search-image?query=ceramic%2520vase%2520with%2520handpainted%2520design%252C%2520artistic%2520pottery%252C%2520high-quality%2520product%2520photography%252C%2520professional%2520lighting%252C%2520clean%2520background%252C%2520extremely%2520detailed%252C%2520perfect%2520for%2520a%2520luxury%2520art%2520gallery&width=500&height=500&seq=114&orientation=squarish"
+                alt="Handcrafted Ceramic Vase"
+                class="artwork-image w-full h-64 object-cover object-top transition-all duration-300"
+              />
+              <div
+                class="artwork-details absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 transition-opacity duration-300"
+              >
+                <button
+                  class="bg-white text-gray-900 px-6 py-2 rounded-button font-medium hover:bg-gray-100 transition-colors whitespace-nowrap"
+                >
+                  Quick View
+                </button>
+              </div>
+            </div>
+            <div class="p-4">
+              <h3 class="text-lg font-semibold text-gray-900">
+                Handcrafted Ceramic Vase
+              </h3>
+              <p class="text-gray-600 text-sm mb-2">by Sarah Anderson</p>
+              <div class="flex justify-between items-center">
+                <span class="text-primary font-medium">$120</span>
+                <button
+                  class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-700 hover:bg-primary hover:text-white transition-colors"
+                >
+                  <i class="ri-shopping-cart-line"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Related Item 3 -->
+          <div
+            class="artwork-card bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div class="relative">
+              <img
+                src="https://readdy.ai/api/search-image?query=handwoven%2520wall%2520hanging%2520with%2520natural%2520fibers%2520and%2520subtle%2520colors%252C%2520textile%2520art%252C%2520high-quality%2520product%2520photography%252C%2520professional%2520lighting%252C%2520clean%2520background%252C%2520extremely%2520detailed%252C%2520perfect%2520for%2520a%2520luxury%2520art%2520gallery&width=500&height=500&seq=115&orientation=squarish"
+                alt="Woven Wall Hanging"
+                class="artwork-image w-full h-64 object-cover object-top transition-all duration-300"
+              />
+              <div
+                class="artwork-details absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 transition-opacity duration-300"
+              >
+                <button
+                  class="bg-white text-gray-900 px-6 py-2 rounded-button font-medium hover:bg-gray-100 transition-colors whitespace-nowrap"
+                >
+                  Quick View
+                </button>
+              </div>
+            </div>
+            <div class="p-4">
+              <h3 class="text-lg font-semibold text-gray-900">
+                Woven Wall Hanging
+              </h3>
+              <p class="text-gray-600 text-sm mb-2">by Sarah Anderson</p>
+              <div class="flex justify-between items-center">
+                <span class="text-primary font-medium">$195</span>
+                <button
+                  class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-700 hover:bg-primary hover:text-white transition-colors"
+                >
+                  <i class="ri-shopping-cart-line"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Related Item 4 -->
+          <div
+            class="artwork-card bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div class="relative">
+              <img
+                src="https://readdy.ai/api/search-image?query=handmade%2520jewelry%2520with%2520natural%2520stones%2520and%2520metal%2520work%252C%2520artistic%2520necklace%252C%2520high-quality%2520product%2520photography%252C%2520professional%2520lighting%252C%2520clean%2520background%252C%2520extremely%2520detailed%252C%2520perfect%2520for%2520a%2520luxury%2520art%2520gallery&width=500&height=500&seq=116&orientation=squarish"
+                alt="Artisan Jewelry"
+                class="artwork-image w-full h-64 object-cover object-top transition-all duration-300"
+              />
+              <div
+                class="artwork-details absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 transition-opacity duration-300"
+              >
+                <button
+                  class="bg-white text-gray-900 px-6 py-2 rounded-button font-medium hover:bg-gray-100 transition-colors whitespace-nowrap"
+                >
+                  Quick View
+                </button>
+              </div>
+            </div>
+            <div class="p-4">
+              <h3 class="text-lg font-semibold text-gray-900">
+                Artisan Jewelry
+              </h3>
+              <p class="text-gray-600 text-sm mb-2">by Sarah Anderson</p>
+              <div class="flex justify-between items-center">
+                <span class="text-primary font-medium">$150</span>
+                <button
+                  class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-700 hover:bg-primary hover:text-white transition-colors"
+                >
+                  <i class="ri-shopping-cart-line"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200">
+      <div class="container mx-auto px-6 py-12">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div>
+            <a
+              href="https://readdy.ai/home/c4a01121-4d15-46d6-a775-66ddbb8ccbc8/47ce33c1-a097-4305-9f4f-d8fbd1882374"
+              data-readdy="true"
+              class="text-3xl font-['Pacifico'] text-primary mb-6 inline-block"
+              >logo</a
+            >
+            <p class="text-gray-600 mb-6">
+              Curating exceptional art for discerning collectors since 2015. We
+              connect artists with art lovers worldwide.
+            </p>
+            <div class="flex space-x-4">
+              <a
+                href="#"
+                class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+              >
+                <i class="ri-instagram-line"></i>
+              </a>
+              <a
+                href="#"
+                class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+              >
+                <i class="ri-facebook-fill"></i>
+              </a>
+              <a
+                href="#"
+                class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+              >
+                <i class="ri-pinterest-line"></i>
+              </a>
+              <a
+                href="#"
+                class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+              >
+                <i class="ri-twitter-x-line"></i>
+              </a>
+            </div>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-6">Explore</h3>
+            <ul class="space-y-4">
+              <li>
+                <a
+                  href="#"
+                  class="text-gray-600 hover:text-primary transition-colors"
+                  >All Artworks</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="text-gray-600 hover:text-primary transition-colors"
+                  >Featured Collections</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="text-gray-600 hover:text-primary transition-colors"
+                  >Artists Directory</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="text-gray-600 hover:text-primary transition-colors"
+                  >Art Advisory</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="text-gray-600 hover:text-primary transition-colors"
+                  >Gift Cards</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-6">
+              Customer Service
+            </h3>
+            <ul class="space-y-4">
+              <li>
+                <a
+                  href="#"
+                  class="text-gray-600 hover:text-primary transition-colors"
+                  >Shipping & Returns</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="text-gray-600 hover:text-primary transition-colors"
+                  >Secure Payments</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="text-gray-600 hover:text-primary transition-colors"
+                  >FAQ</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="text-gray-600 hover:text-primary transition-colors"
+                  >Contact Us</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="text-gray-600 hover:text-primary transition-colors"
+                  >Terms & Conditions</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-6">Contact Us</h3>
+            <ul class="space-y-4">
+              <li class="flex items-start">
+                <div
+                  class="w-5 h-5 flex items-center justify-center text-gray-600 mt-1 mr-3"
+                >
+                  <i class="ri-map-pin-line"></i>
+                </div>
+                <span class="text-gray-600"
+                  >123 Gallery Street, SoHo<br />New York, NY 10012</span
+                >
+              </li>
+              <li class="flex items-center">
+                <div
+                  class="w-5 h-5 flex items-center justify-center text-gray-600 mr-3"
+                >
+                  <i class="ri-phone-line"></i>
+                </div>
+                <span class="text-gray-600">+1 (212) 555-7890</span>
+              </li>
+              <li class="flex items-center">
+                <div
+                  class="w-5 h-5 flex items-center justify-center text-gray-600 mr-3"
+                >
+                  <i class="ri-mail-line"></i>
+                </div>
+                <span class="text-gray-600">info@artgallery.com</span>
+              </li>
+              <li class="flex items-center">
+                <div
+                  class="w-5 h-5 flex items-center justify-center text-gray-600 mr-3"
+                >
+                  <i class="ri-time-line"></i>
+                </div>
+                <span class="text-gray-600"
+                  >Tue-Sun: 10am - 6pm<br />Monday: Closed</span
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div
+          class="border-t border-gray-200 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center"
+        >
+          <p class="text-gray-600 text-sm mb-4 md:mb-0">
+            © 2025 Artistry Gallery. All rights reserved.
+          </p>
+          <div class="flex items-center space-x-6">
+            <div class="flex items-center">
+              <i class="ri-visa-fill text-2xl text-gray-600 mr-2"></i>
+              <i class="ri-mastercard-fill text-2xl text-gray-600 mr-2"></i>
+              <i class="ri-paypal-fill text-2xl text-gray-600 mr-2"></i>
+              <i class="ri-apple-fill text-2xl text-gray-600"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script id="filter-dropdown-script">
+      document.addEventListener("DOMContentLoaded", function () {
+        // Price Filter Dropdown
+        const priceFilterBtn = document.getElementById("priceFilterBtn");
+        const priceFilterDropdown = document.getElementById("priceFilterDropdown");
+        const priceRangeSlider = document.getElementById("priceRangeSlider");
+        const minPriceDisplay = document.getElementById("minPriceDisplay");
+        const maxPriceDisplay = document.getElementById("maxPriceDisplay");
+        const minPriceInput = document.getElementById("minPrice");
+        const maxPriceInput = document.getElementById("maxPrice");
+
+        priceFilterBtn.addEventListener("click", function () {
+          priceFilterDropdown.classList.toggle("hidden");
+          styleFilterDropdown.classList.add("hidden");
+          sizeFilterDropdown.classList.add("hidden");
+          sortByDropdown.classList.add("hidden");
+        });
+
+        priceRangeSlider.addEventListener("input", function () {
+          maxPriceDisplay.textContent = this.value;
+          maxPriceInput.value = this.value;
+        });
+
+        minPriceInput.addEventListener("input", function () {
+          minPriceDisplay.textContent = this.value;
+        });
+
+        maxPriceInput.addEventListener("input", function () {
+          maxPriceDisplay.textContent = this.value;
+          priceRangeSlider.value = this.value;
+        });
+
+        // Style Filter Dropdown
+        const styleFilterBtn = document.getElementById("styleFilterBtn");
+        const styleFilterDropdown = document.getElementById("styleFilterDropdown");
+
+        styleFilterBtn.addEventListener("click", function () {
+          styleFilterDropdown.classList.toggle("hidden");
+          priceFilterDropdown.classList.add("hidden");
+          sizeFilterDropdown.classList.add("hidden");
+          sortByDropdown.classList.add("hidden");
+        });
+
+        // Size Filter Dropdown
+        const sizeFilterBtn = document.getElementById("sizeFilterBtn");
+        const sizeFilterDropdown = document.getElementById("sizeFilterDropdown");
+
+        sizeFilterBtn.addEventListener("click", function () {
+          sizeFilterDropdown.classList.toggle("hidden");
+          priceFilterDropdown.classList.add("hidden");
+          styleFilterDropdown.classList.add("hidden");
+          sortByDropdown.classList.add("hidden");
+        });
+
+        // Sort By Dropdown
+        const sortByBtn = document.getElementById("sortByBtn");
+        const sortByDropdown = document.getElementById("sortByDropdown");
+
+        sortByBtn.addEventListener("click", function () {
+          sortByDropdown.classList.toggle("hidden");
+          priceFilterDropdown.classList.add("hidden");
+          styleFilterDropdown.classList.add("hidden");
+          sizeFilterDropdown.classList.add("hidden");
+        });
+
+        // Close dropdowns when clicking outside
+        document.addEventListener("click", function (event) {
+          if (
+            !priceFilterBtn.contains(event.target) &&
+            !priceFilterDropdown.contains(event.target)
+          ) {
+            priceFilterDropdown.classList.add("hidden");
+          }
+          if (
+            !styleFilterBtn.contains(event.target) &&
+            !styleFilterDropdown.contains(event.target)
+          ) {
+            styleFilterDropdown.classList.add("hidden");
+          }
+          if (
+            !sizeFilterBtn.contains(event.target) &&
+            !sizeFilterDropdown.contains(event.target)
+          ) {
+            sizeFilterDropdown.classList.add("hidden");
+          }
+          if (
+            !sortByBtn.contains(event.target) &&
+            !sortByDropdown.contains(event.target)
+          ) {
+            sortByDropdown.classList.add("hidden");
+          }
+        });
+
+        // Sort By Options
+        const sortOptions = document.querySelectorAll("#sortByDropdown button");
+        sortOptions.forEach((option) => {
+          option.addEventListener("click", function () {
+            sortByBtn.querySelector("span").textContent =
+              "Sort by: " + this.textContent;
+            sortByDropdown.classList.add("hidden");
+          });
+        });
+
+        // Apply Filter Buttons
+        const applyPriceFilter = document.getElementById("applyPriceFilter");
+        const applyStyleFilter = document.getElementById("applyStyleFilter");
+        const applySizeFilter = document.getElementById("applySizeFilter");
+
+        applyPriceFilter.addEventListener("click", function () {
+          priceFilterDropdown.classList.add("hidden");
+          // Apply price filter logic here
+        });
+
+        applyStyleFilter.addEventListener("click", function () {
+          styleFilterDropdown.classList.add("hidden");
+          // Apply style filter logic here
+        });
+
+        applySizeFilter.addEventListener("click", function () {
+          sizeFilterDropdown.classList.add("hidden");
+          // Apply size filter logic here
+        });
+      });
+    </script>
+
+    <script id="navigation-script">
+      document.addEventListener("DOMContentLoaded", function () {
+        const navLinks = document.querySelectorAll(".nav-link");
+        navLinks.forEach((link) => {
+          link.addEventListener("click", function (e) {
+            if (!link.getAttribute("data-readdy")) {
+              e.preventDefault();
+              navLinks.forEach((l) => l.classList.remove("active"));
+              this.classList.add("active");
+            }
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
