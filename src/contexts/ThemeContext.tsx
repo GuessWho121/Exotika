@@ -1,6 +1,5 @@
 "use client"
 
-import type React from "react"
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 
 interface ThemeContextType {

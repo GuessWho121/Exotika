@@ -1,80 +1,55 @@
 "use client"
 
-import type React from "react"
-import { createContext, useContext, useReducer, useEffect, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 
-export interface Notification {
-  id: string
-  type: "success" | "error" | "info" | "warning"
-  title: string
-  message: string
-  duration?: number
+interface ThemeContextType {
+  isDarkMode: boolean
+  toggleDarkMode: () => void
 }
 
-interface NotificationState {
-  notifications: Notification[]
-}
+const ThemeContext = createContext<ThemeContextType | null>(null)
 
-type NotificationAction =
-  | { type: "ADD_NOTIFICATION"; payload: Omit<Notification, "id"> }
-  | { type: "REMOVE_NOTIFICATION"; payload: string }
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [isDarkMode, setIsDarkMode] = useState(false)
 
-const NotificationContext = createContext<{
-  state: NotificationState
-  dispatch: React.Dispatch<NotificationAction>
-  addNotification: (notification: Omit<Notification, "id">) => void
-  removeNotification: (id: string) => void
-} | null>(null)
+  useEffect(() => {
+    // Check for saved theme preference or default to light mode
+    const savedTheme = localStorage.getItem("theme")
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+    
+    if (savedTheme === "dark" || (!savedTheme && prefersDark)) {
+      setIsDarkMode(true)
+      document.documentElement.classList.add("dark")
+    } else {
+      setIsDarkMode(false)
+      document.documentElement.classList.remove("dark")
+    }
+  }, [])
 
-function notificationReducer(state: NotificationState, action: NotificationAction): NotificationState {
-  switch (action.type) {
-    case "ADD_NOTIFICATION":
-      return {
-        ...state,
-        notifications: [
-          ...state.notifications,
-          {
-            ...action.payload,
-            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-          },
-        ],
-      }
-
-    case "REMOVE_NOTIFICATION":
-      return {
-        ...state,
-        notifications: state.notifications.filter(notification => notification.id !== action.payload),
-      }
-
-    default:
-      return state
-  }
-}
-
-export function NotificationProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(notificationReducer, {
-    notifications: [],
-  })
-
-  const addNotification = (notification: Omit<Notification, "id">) => {
-    dispatch({ type: "ADD_NOTIFICATION", payload: notification })
-  }
-
-  const removeNotification = (id: string) => {
-    dispatch({ type: "REMOVE_NOTIFICATION", payload: id })
+  const toggleDarkMode = () => {
+    const newMode = !isDarkMode
+    setIsDarkMode(newMode)
+    
+    if (newMode) {
+      document.documentElement.classList.add("dark")
+      localStorage.setItem("theme", "dark")
+    } else {
+      document.documentElement.classList.remove("dark")
+      localStorage.setItem("theme", "light")
+    }
   }
 
   return (
-    <NotificationContext.Provider value={{ state, dispatch, addNotification, removeNotification }}>
+    <ThemeContext.Provider value={{ isDarkMode, toggleDarkMode }}>
       {children}
-    </NotificationContext.Provider>
+    </ThemeContext.Provider>
   )
 }
 
-export function useNotifications() {
-  const context = useContext(NotificationContext)
+export function useTheme() {
+  const context = useContext(ThemeContext)
   if (!context) {
-    throw new Error("useNotifications must be used within a NotificationProvider")
+    throw new Error("useTheme must be used within a ThemeProvider")
   }
   return context
 }
