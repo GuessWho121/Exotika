@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  exotika-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    container_name: exotika-creation
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    networks:
+      - exotika-network
+
+networks:
+  exotika-network:
+    driver: bridge
