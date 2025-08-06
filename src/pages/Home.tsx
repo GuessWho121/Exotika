@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom"
 import { ProductCard } from "../components/ProductCard"
 import { ArtistSVG } from "../components/ArtistSVG"
 import { useAdmin } from "../contexts/AdminContext"
@@ -37,21 +38,35 @@ export function Home() {
             </h2>
           </div>
           <div className="relative z-10 flex flex-col sm:flex-row gap-4 items-center">
-            <button className="group flex h-14 min-w-[160px] items-center justify-center overflow-hidden rounded-2xl bg-[#FFDE59] px-8 text-base font-bold leading-normal tracking-[0.015em] text-[#4A3F00] shadow-lg transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl hover:bg-[#F4D03F] @[480px]:px-10">
+            <Link 
+              to="/paintings"
+              className="group flex h-14 min-w-[160px] items-center justify-center overflow-hidden rounded-2xl bg-[#FFDE59] px-8 text-base font-bold leading-normal tracking-[0.015em] text-[#4A3F00] shadow-lg transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl hover:bg-[#F4D03F] @[480px]:px-10 no-underline"
+            >
               <span className="truncate">Explore Collection</span>
-            </button>
-            <button className="group flex h-14 min-w-[160px] items-center justify-center overflow-hidden rounded-2xl border-2 border-white bg-white/90 backdrop-blur-sm px-8 text-base font-bold leading-normal tracking-[0.015em] text-[#4A3F00] shadow-lg transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl hover:bg-white @[480px]:px-10">
+            </Link>
+            <Link 
+              to="/custom-order"
+              className="group flex h-14 min-w-[160px] items-center justify-center overflow-hidden rounded-2xl border-2 border-white bg-white/90 backdrop-blur-sm px-8 text-base font-bold leading-normal tracking-[0.015em] text-[#4A3F00] shadow-lg transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl hover:bg-white @[480px]:px-10 no-underline"
+            >
               <span className="truncate">Custom Orders</span>
-            </button>
+            </Link>
           </div>
         </div>
       </div>
 
       {/* Featured Artworks */}
       <section className="py-12">
-        <h2 className="mb-6 px-4 text-center text-3xl font-bold leading-tight tracking-tight text-[#4A3F00] dark:text-white sm:text-left">
-          Featured Artworks
-        </h2>
+        <div className="flex items-center justify-between mb-6 px-4">
+          <h2 className="text-3xl font-bold leading-tight tracking-tight text-[#4A3F00] dark:text-white">
+            Featured Artworks
+          </h2>
+          <Link 
+            to="/paintings" 
+            className="text-sm font-medium text-[#4A3F00] dark:text-white hover:text-[#FFDE59] transition-colors no-underline"
+          >
+            View All →
+          </Link>
+        </div>
         <div className="grid grid-cols-1 gap-6 px-4 sm:grid-cols-2 lg:grid-cols-3">
           {featuredArtworks.map((artwork) => (
             <ProductCard
@@ -69,9 +84,17 @@ export function Home() {
 
       {/* Featured Crafts */}
       <section className="my-8 rounded-2xl bg-[#FFF5CC] dark:bg-gray-800 py-12 transition-colors duration-300">
-        <h2 className="mb-6 px-4 text-center text-3xl font-bold leading-tight tracking-tight text-[#4A3F00] dark:text-white sm:text-left">
-          Featured Crafts
-        </h2>
+        <div className="flex items-center justify-between mb-6 px-4">
+          <h2 className="text-3xl font-bold leading-tight tracking-tight text-[#4A3F00] dark:text-white">
+            Featured Crafts
+          </h2>
+          <Link 
+            to="/crafts" 
+            className="text-sm font-medium text-[#4A3F00] dark:text-white hover:text-[#FFDE59] transition-colors no-underline"
+          >
+            View All →
+          </Link>
+        </div>
         <div className="grid grid-cols-1 gap-6 px-4 sm:grid-cols-2 lg:grid-cols-3">
           {featuredCrafts.map((craft) => (
             <ProductCard
@@ -89,9 +112,17 @@ export function Home() {
 
       {/* Featured Tote Bags */}
       <section className="py-12">
-        <h2 className="mb-6 px-4 text-center text-3xl font-bold leading-tight tracking-tight text-[#4A3F00] dark:text-white sm:text-left">
-          Featured Tote Bags
-        </h2>
+        <div className="flex items-center justify-between mb-6 px-4">
+          <h2 className="text-3xl font-bold leading-tight tracking-tight text-[#4A3F00] dark:text-white">
+            Featured Tote Bags
+          </h2>
+          <Link 
+            to="/tote-bags" 
+            className="text-sm font-medium text-[#4A3F00] dark:text-white hover:text-[#FFDE59] transition-colors no-underline"
+          >
+            View All →
+          </Link>
+        </div>
         <div className="grid grid-cols-1 gap-6 px-4 sm:grid-cols-2 lg:grid-cols-3">
           {featuredToteBags.map((bag) => (
             <ProductCard
@@ -118,9 +149,12 @@ export function Home() {
             stylish tote bags that beautifully reflect her distinct artistic vision. Each piece is meticulously created
             with an unwavering attention to detail and a steadfast commitment to exceptional quality.
           </p>
-          <button className="mx-auto flex h-12 min-w-[120px] max-w-[480px] transform items-center justify-center overflow-hidden rounded-xl bg-[#FFDE59] px-6 text-base font-bold leading-normal tracking-[0.015em] text-[#4A3F00] shadow-md transition-all duration-300 ease-in-out hover:scale-105 hover:bg-opacity-90 hover:shadow-lg @[480px]:h-14 @[480px]:px-8">
+          <Link 
+            to="/profile"
+            className="mx-auto flex h-12 min-w-[120px] max-w-[480px] transform items-center justify-center overflow-hidden rounded-xl bg-[#FFDE59] px-6 text-base font-bold leading-normal tracking-[0.015em] text-[#4A3F00] shadow-md transition-all duration-300 ease-in-out hover:scale-105 hover:bg-opacity-90 hover:shadow-lg @[480px]:h-14 @[480px]:px-8 no-underline"
+          >
             <span className="truncate">Learn More About Sarah</span>
-          </button>
+          </Link>
         </div>
       </section>
     </div>
