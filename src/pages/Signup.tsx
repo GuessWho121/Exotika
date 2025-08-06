@@ -11,7 +11,6 @@ export function Signup() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [fieldErrors, setFieldErrors] = useState<{[key: string]: boolean}>({})
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -21,6 +20,8 @@ export function Signup() {
     agreeToTerms: false,
     subscribeNewsletter: true,
   })
+  const [fieldErrors, setFieldErrors] = useState<{[key: string]: boolean}>({})
+
 
   const validateForm = () => {
     const errors: {[key: string]: boolean} = {}
@@ -66,7 +67,7 @@ export function Signup() {
         duration: 4000,
       })
       isValid = false
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)) {
       errors.email = true
       addNotification({
         type: "error",
@@ -77,7 +78,7 @@ export function Signup() {
       isValid = false
     }
 
-    // Phone validation
+    // Phone validation (exactly 10 digits)
     if (!formData.phone) {
       errors.phone = true
       addNotification({
@@ -87,12 +88,12 @@ export function Signup() {
         duration: 4000,
       })
       isValid = false
-    } else if (!/^[\+]?[1-9][\d]{9,14}$/.test(formData.phone.replace(/[\s\-()]/g, ''))) {
+    } else if (!/^[6-9]\d{9}$/.test(formData.phone.replace(/[\s\-()]/g, ''))) {
       errors.phone = true
       addNotification({
         type: "error",
-        title: "Invalid Phone",
-        message: "Please enter a valid phone number (10-15 digits).",
+        title: "Invalid Phone Number",
+        message: "Please enter a valid 10-digit Indian mobile number.",
         duration: 4000,
       })
       isValid = false
@@ -178,8 +179,7 @@ export function Signup() {
       ...formData,
       [name]: type === "checkbox" ? checked : value,
     })
-    
-    // Clear error when user starts typing
+    // Clear field error when user starts typing
     if (fieldErrors[name]) {
       setFieldErrors(prev => ({ ...prev, [name]: false }))
     }
@@ -230,7 +230,7 @@ export function Signup() {
         </div>
 
         {/* Signup Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} noValidate className="space-y-6">
           <div className="rounded-lg border border-[#FFF5CC] bg-white p-6 shadow-sm">
             <div className="space-y-4">
               {/* Name Field */}
@@ -241,7 +241,6 @@ export function Signup() {
                   <input
                     type="text"
                     name="name"
-                    required
                     value={formData.name}
                     onChange={handleInputChange}
                     className={`block w-full rounded-lg border ${fieldErrors.name ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] pl-10 pr-3 py-2 text-[#4A3F00] placeholder-[#8C7B00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
@@ -258,7 +257,6 @@ export function Signup() {
                   <input
                     type="email"
                     name="email"
-                    required
                     value={formData.email}
                     onChange={handleInputChange}
                     className={`block w-full rounded-lg border ${fieldErrors.email ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] pl-10 pr-3 py-2 text-[#4A3F00] placeholder-[#8C7B00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
@@ -275,11 +273,10 @@ export function Signup() {
                   <input
                     type="tel"
                     name="phone"
-                    required
                     value={formData.phone}
                     onChange={handleInputChange}
                     className={`block w-full rounded-lg border ${fieldErrors.phone ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] pl-10 pr-3 py-2 text-[#4A3F00] placeholder-[#8C7B00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
-                    placeholder="Enter your phone number"
+                    placeholder="Enter your 10-digit mobile number"
                   />
                 </div>
               </div>
@@ -292,7 +289,6 @@ export function Signup() {
                   <input
                     type={showPassword ? "text" : "password"}
                     name="password"
-                    required
                     minLength={8}
                     value={formData.password}
                     onChange={handleInputChange}
@@ -317,7 +313,6 @@ export function Signup() {
                   <input
                     type={showConfirmPassword ? "text" : "password"}
                     name="confirmPassword"
-                    required
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
                     className={`block w-full rounded-lg border ${fieldErrors.confirmPassword ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] pl-10 pr-10 py-2 text-[#4A3F00] placeholder-[#8C7B00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
@@ -339,10 +334,9 @@ export function Signup() {
                   <input
                     type="checkbox"
                     name="agreeToTerms"
-                    required
                     checked={formData.agreeToTerms}
                     onChange={handleInputChange}
-                    className={`mt-1 h-4 w-4 rounded border-[#FFF5CC] text-[#FFDE59] focus:ring-[#FFDE59] ${fieldErrors.agreeToTerms ? 'border-red-500' : ''}`}
+                    className={`mt-1 h-4 w-4 rounded border ${fieldErrors.agreeToTerms ? 'border-red-500' : 'border-[#FFF5CC]'} text-[#FFDE59] focus:ring-[#FFDE59]`}
                   />
                   <label className="ml-2 text-sm text-[#8C7B00]">
                     I agree to the{" "}

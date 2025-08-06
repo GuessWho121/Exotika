@@ -13,7 +13,6 @@ export function CustomOrder() {
   const { addNotification } = useNotifications()
   const navigate = useNavigate()
 
-  const [fieldErrors, setFieldErrors] = useState<{[key: string]: boolean}>({})
   const [formData, setFormData] = useState({
     type: "painting" as "painting" | "craft",
     description: "",
@@ -27,6 +26,8 @@ export function CustomOrder() {
   const [referenceImages, setReferenceImages] = useState<File[]>([])
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState<{[key: string]: boolean}>({})
+
 
   const validateForm = () => {
     const errors: {[key: string]: boolean} = {}
@@ -123,7 +124,7 @@ export function CustomOrder() {
         duration: 4000,
       })
       isValid = false
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)) {
       errors.email = true
       addNotification({
         type: "error",
@@ -134,7 +135,7 @@ export function CustomOrder() {
       isValid = false
     }
 
-    // Phone validation
+    // Phone validation (exactly 10 digits)
     if (!formData.phone) {
       errors.phone = true
       addNotification({
@@ -144,12 +145,12 @@ export function CustomOrder() {
         duration: 4000,
       })
       isValid = false
-    } else if (!/^[\+]?[1-9][\d]{9,14}$/.test(formData.phone.replace(/[\s\-()]/g, ''))) {
+    } else if (!/^[6-9]\d{9}$/.test(formData.phone.replace(/[\s\-()]/g, ''))) {
       errors.phone = true
       addNotification({
         type: "error",
-        title: "Invalid Phone",
-        message: "Please enter a valid phone number.",
+        title: "Invalid Phone Number",
+        message: "Please enter a valid 10-digit Indian mobile number.",
         duration: 4000,
       })
       isValid = false
@@ -172,13 +173,14 @@ export function CustomOrder() {
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
+    const { name, value, type } = e.target
+    const checked = (e.target as HTMLInputElement).checked
+
     setFormData({
       ...formData,
-      [name]: value,
+      [name]: type === "checkbox" ? checked : value,
     })
-    
-    // Clear error when user starts typing
+    // Clear field error when user starts typing
     if (fieldErrors[name]) {
       setFieldErrors(prev => ({ ...prev, [name]: false }))
     }
@@ -306,7 +308,7 @@ export function CustomOrder() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} noValidate className="space-y-6">
         {/* Project Details */}
         <div className="rounded-lg border border-[#FFF5CC] bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-xl font-semibold text-[#4A3F00]">Project Details</h2>
@@ -328,7 +330,6 @@ export function CustomOrder() {
               <label className="block text-sm font-medium text-[#4A3F00]">Description</label>
               <textarea
                 name="description"
-                required
                 rows={4}
                 placeholder="Please describe your vision in detail. Include colors, style, subject matter, and any specific requirements..."
                 value={formData.description}
@@ -359,7 +360,6 @@ export function CustomOrder() {
                 <input
                   type="number"
                   name="budget"
-                  required
                   min="4000"
                   max="500000"
                   placeholder="16000"
@@ -456,7 +456,6 @@ export function CustomOrder() {
               <input
                 type="text"
                 name="name"
-                required
                 value={formData.name}
                 onChange={handleInputChange}
                 className={`mt-1 block w-full rounded-lg border ${fieldErrors.name ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
@@ -468,7 +467,6 @@ export function CustomOrder() {
               <input
                 type="email"
                 name="email"
-                required
                 value={formData.email}
                 onChange={handleInputChange}
                 className={`mt-1 block w-full rounded-lg border ${fieldErrors.email ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
@@ -480,11 +478,10 @@ export function CustomOrder() {
               <input
                 type="tel"
                 name="phone"
-                required
                 value={formData.phone}
                 onChange={handleInputChange}
                 className={`mt-1 block w-full rounded-lg border ${fieldErrors.phone ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
-                placeholder="Enter your phone number"
+                placeholder="Enter your 10-digit mobile number"
               />
             </div>
           </div>

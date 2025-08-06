@@ -14,7 +14,6 @@ export function Checkout() {
   const { addNotification } = useNotifications()
   const navigate = useNavigate()
 
-  const [fieldErrors, setFieldErrors] = useState<{[key: string]: boolean}>({})
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -24,6 +23,7 @@ export function Checkout() {
     zipCode: "",
   })
 
+  const [fieldErrors, setFieldErrors] = useState<{[key: string]: boolean}>({})
   const [isProcessing, setIsProcessing] = useState(false)
 
   const validateForm = () => {
@@ -61,7 +61,7 @@ export function Checkout() {
         duration: 4000,
       })
       isValid = false
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)) {
       errors.email = true
       addNotification({
         type: "error",
@@ -72,7 +72,7 @@ export function Checkout() {
       isValid = false
     }
 
-    // Phone validation
+    // Phone validation (exactly 10 digits)
     if (!formData.phone) {
       errors.phone = true
       addNotification({
@@ -82,12 +82,12 @@ export function Checkout() {
         duration: 4000,
       })
       isValid = false
-    } else if (!/^[\+]?[1-9][\d]{9,14}$/.test(formData.phone.replace(/[\s\-()]/g, ''))) {
+    } else if (!/^[6-9]\d{9}$/.test(formData.phone.replace(/[\s\-()]/g, ''))) {
       errors.phone = true
       addNotification({
         type: "error",
-        title: "Invalid Phone",
-        message: "Please enter a valid phone number.",
+        title: "Invalid Phone Number",
+        message: "Please enter a valid 10-digit Indian mobile number.",
         duration: 4000,
       })
       isValid = false
@@ -145,12 +145,12 @@ export function Checkout() {
         duration: 4000,
       })
       isValid = false
-    } else if (!/^\d{5,6}$/.test(formData.zipCode.trim())) {
+    } else if (!/^\d{6}$/.test(formData.zipCode.trim())) {
       errors.zipCode = true
       addNotification({
         type: "error",
         title: "Invalid ZIP Code",
-        message: "Please enter a valid 5-6 digit ZIP code.",
+        message: "Please enter a valid 6-digit Indian PIN code.",
         duration: 4000,
       })
       isValid = false
@@ -166,8 +166,7 @@ export function Checkout() {
       ...formData,
       [name]: value,
     })
-    
-    // Clear error when user starts typing
+    // Clear field error when user starts typing
     if (fieldErrors[name]) {
       setFieldErrors(prev => ({ ...prev, [name]: false }))
     }
@@ -232,7 +231,7 @@ export function Checkout() {
       <div className="grid gap-8 lg:grid-cols-2">
         {/* Checkout Form */}
         <div>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} noValidate className="space-y-6">
             {/* Customer Information */}
             <div className="rounded-lg border border-[#FFF5CC] bg-white p-6 shadow-sm">
               <h2 className="mb-4 text-xl font-semibold text-[#4A3F00]">Customer Information</h2>
@@ -242,7 +241,6 @@ export function Checkout() {
                   <input
                     type="text"
                     name="name"
-                    required
                     value={formData.name}
                     onChange={handleInputChange}
                     className={`mt-1 block w-full rounded-lg border ${fieldErrors.name ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
@@ -254,7 +252,6 @@ export function Checkout() {
                   <input
                     type="email"
                     name="email"
-                    required
                     value={formData.email}
                     onChange={handleInputChange}
                     className={`mt-1 block w-full rounded-lg border ${fieldErrors.email ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
@@ -266,11 +263,10 @@ export function Checkout() {
                   <input
                     type="tel"
                     name="phone"
-                    required
                     value={formData.phone}
                     onChange={handleInputChange}
                     className={`mt-1 block w-full rounded-lg border ${fieldErrors.phone ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
-                    placeholder="Enter your phone number"
+                    placeholder="Enter your 10-digit mobile number"
                   />
                 </div>
               </div>
@@ -284,7 +280,6 @@ export function Checkout() {
                   <label className="block text-sm font-medium text-[#4A3F00]">Address</label>
                   <textarea
                     name="address"
-                    required
                     rows={3}
                     value={formData.address}
                     onChange={handleInputChange}
@@ -298,7 +293,6 @@ export function Checkout() {
                     <input
                       type="text"
                       name="city"
-                      required
                       value={formData.city}
                       onChange={handleInputChange}
                       className={`mt-1 block w-full rounded-lg border ${fieldErrors.city ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
@@ -310,7 +304,6 @@ export function Checkout() {
                     <input
                       type="text"
                       name="zipCode"
-                      required
                       value={formData.zipCode}
                       onChange={handleInputChange}
                       className={`mt-1 block w-full rounded-lg border ${fieldErrors.zipCode ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}

@@ -143,7 +143,7 @@ export function Home() {
         <div className="mx-auto max-w-3xl text-center">
           <div className="mx-auto mb-6 h-32 w-32 overflow-hidden rounded-full border-4 border-[#FFDE59] shadow-lg">
             <img
-              src="/images/artist-photo.png"
+              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/artist-picture-kdML3OZTrU1u1XG8SYK0KBPJIApFIX.webp"
               alt="Sarah - Artist and Creator"
               className="h-full w-full object-cover"
             />
