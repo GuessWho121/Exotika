@@ -6,12 +6,14 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Upload, X, ImageIcon } from 'lucide-react'
 import { useAdmin } from "../contexts/AdminContext"
+import { useNotifications } from "../contexts/NotificationContext"
 
 export function CustomOrder() {
   const { dispatch } = useAdmin()
+  const { addNotification } = useNotifications()
   const navigate = useNavigate()
 
-  const [errors, setErrors] = useState<{[key: string]: string}>({})
+  const [fieldErrors, setFieldErrors] = useState<{[key: string]: boolean}>({})
   const [formData, setFormData] = useState({
     type: "painting" as "painting" | "craft",
     description: "",
@@ -27,43 +29,146 @@ export function CustomOrder() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const validateForm = () => {
-    const newErrors: {[key: string]: string} = {}
+    const errors: {[key: string]: boolean} = {}
+    let isValid = true
 
     // Description validation
     if (!formData.description.trim()) {
-      newErrors.description = "Description is required"
+      errors.description = true
+      addNotification({
+        type: "error",
+        title: "Description Required",
+        message: "Please describe your custom order requirements.",
+        duration: 4000,
+      })
+      isValid = false
     } else if (formData.description.trim().length < 20) {
-      newErrors.description = "Description must be at least 20 characters long"
+      errors.description = true
+      addNotification({
+        type: "error",
+        title: "Description Too Short",
+        message: "Please provide at least 20 characters describing your vision.",
+        duration: 4000,
+      })
+      isValid = false
+    } else if (formData.description.trim().length > 1000) {
+      errors.description = true
+      addNotification({
+        type: "error",
+        title: "Description Too Long",
+        message: "Please keep description under 1000 characters.",
+        duration: 4000,
+      })
+      isValid = false
     }
 
     // Budget validation
     if (!formData.budget) {
-      newErrors.budget = "Budget is required"
+      errors.budget = true
+      addNotification({
+        type: "error",
+        title: "Budget Required",
+        message: "Please specify your budget for this project.",
+        duration: 4000,
+      })
+      isValid = false
     } else if (Number.parseFloat(formData.budget) < 4000) {
-      newErrors.budget = "Minimum budget is ₹4,000"
+      errors.budget = true
+      addNotification({
+        type: "error",
+        title: "Budget Too Low",
+        message: "Minimum budget for custom orders is ₹4,000.",
+        duration: 4000,
+      })
+      isValid = false
+    } else if (Number.parseFloat(formData.budget) > 500000) {
+      errors.budget = true
+      addNotification({
+        type: "error",
+        title: "Budget Too High",
+        message: "Please contact us directly for projects over ₹5,00,000.",
+        duration: 4000,
+      })
+      isValid = false
     }
 
     // Name validation
     if (!formData.name.trim()) {
-      newErrors.name = "Full name is required"
+      errors.name = true
+      addNotification({
+        type: "error",
+        title: "Name Required",
+        message: "Please enter your full name.",
+        duration: 4000,
+      })
+      isValid = false
+    } else if (formData.name.trim().length < 2) {
+      errors.name = true
+      addNotification({
+        type: "error",
+        title: "Invalid Name",
+        message: "Name must be at least 2 characters long.",
+        duration: 4000,
+      })
+      isValid = false
     }
 
     // Email validation
     if (!formData.email) {
-      newErrors.email = "Email is required"
+      errors.email = true
+      addNotification({
+        type: "error",
+        title: "Email Required",
+        message: "Please enter your email address.",
+        duration: 4000,
+      })
+      isValid = false
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address"
+      errors.email = true
+      addNotification({
+        type: "error",
+        title: "Invalid Email",
+        message: "Please enter a valid email address.",
+        duration: 4000,
+      })
+      isValid = false
     }
 
     // Phone validation
     if (!formData.phone) {
-      newErrors.phone = "Phone number is required"
-    } else if (!/^[\+]?[1-9][\d]{0,15}$/.test(formData.phone.replace(/[\s\-$$$$]/g, ''))) {
-      newErrors.phone = "Please enter a valid phone number"
+      errors.phone = true
+      addNotification({
+        type: "error",
+        title: "Phone Required",
+        message: "Please enter your phone number.",
+        duration: 4000,
+      })
+      isValid = false
+    } else if (!/^[\+]?[1-9][\d]{9,14}$/.test(formData.phone.replace(/[\s\-()]/g, ''))) {
+      errors.phone = true
+      addNotification({
+        type: "error",
+        title: "Invalid Phone",
+        message: "Please enter a valid phone number.",
+        duration: 4000,
+      })
+      isValid = false
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    // Size validation (optional but if provided, should be valid)
+    if (formData.size && formData.size.trim().length < 3) {
+      errors.size = true
+      addNotification({
+        type: "error",
+        title: "Invalid Size",
+        message: "Please provide a more detailed size specification.",
+        duration: 4000,
+      })
+      isValid = false
+    }
+
+    setFieldErrors(errors)
+    return isValid
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -74,8 +179,8 @@ export function CustomOrder() {
     })
     
     // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: "" }))
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => ({ ...prev, [name]: false }))
     }
   }
 
@@ -86,11 +191,21 @@ export function CustomOrder() {
     // Validate file types and sizes
     const validFiles = files.filter(file => {
       if (!file.type.startsWith('image/')) {
-        alert(`${file.name} is not a valid image file`)
+        addNotification({
+          type: "error",
+          title: "Invalid File Type",
+          message: `${file.name} is not a valid image file.`,
+          duration: 4000,
+        })
         return false
       }
       if (file.size > 10 * 1024 * 1024) { // 10MB limit
-        alert(`${file.name} is too large. Maximum size is 10MB`)
+        addNotification({
+          type: "error",
+          title: "File Too Large",
+          message: `${file.name} is too large. Maximum size is 10MB.`,
+          duration: 4000,
+        })
         return false
       }
       return true
@@ -98,8 +213,16 @@ export function CustomOrder() {
 
     // Limit to 5 images total
     const remainingSlots = 5 - referenceImages.length
-    const filesToAdd = validFiles.slice(0, remainingSlots)
+    if (validFiles.length > remainingSlots) {
+      addNotification({
+        type: "warning",
+        title: "Too Many Images",
+        message: `You can only upload ${remainingSlots} more image(s). Maximum is 5 total.`,
+        duration: 4000,
+      })
+    }
 
+    const filesToAdd = validFiles.slice(0, remainingSlots)
     setReferenceImages(prev => [...prev, ...filesToAdd])
 
     // Create previews
@@ -111,11 +234,27 @@ export function CustomOrder() {
       }
       reader.readAsDataURL(file)
     })
+
+    if (filesToAdd.length > 0) {
+      addNotification({
+        type: "success",
+        title: "Images Uploaded",
+        message: `${filesToAdd.length} reference image(s) added successfully.`,
+        duration: 3000,
+      })
+    }
   }
 
   const removeImage = (index: number) => {
     setReferenceImages(prev => prev.filter((_, i) => i !== index))
     setImagePreviews(prev => prev.filter((_, i) => i !== index))
+    
+    addNotification({
+      type: "info",
+      title: "Image Removed",
+      message: "Reference image has been removed.",
+      duration: 2000,
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -145,6 +284,13 @@ export function CustomOrder() {
         status: "pending",
         referenceImages: imagePreviews, // Store the base64 images
       },
+    })
+
+    addNotification({
+      type: "success",
+      title: "Custom Order Submitted!",
+      message: "We'll review your request and get back to you within 24 hours.",
+      duration: 5000,
     })
 
     navigate("/custom-order-success")
@@ -187,9 +333,11 @@ export function CustomOrder() {
                 placeholder="Please describe your vision in detail. Include colors, style, subject matter, and any specific requirements..."
                 value={formData.description}
                 onChange={handleInputChange}
-                className={`mt-1 block w-full rounded-lg border ${errors.description ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                className={`mt-1 block w-full rounded-lg border ${fieldErrors.description ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
               />
-              {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
+              <p className="mt-1 text-xs text-[#8C7B00]">
+                {formData.description.length}/1000 characters
+              </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -203,7 +351,7 @@ export function CustomOrder() {
                   placeholder={formData.type === "painting" ? "16x20 inches" : "Medium"}
                   value={formData.size}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                  className={`mt-1 block w-full rounded-lg border ${fieldErrors.size ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
                 />
               </div>
               <div>
@@ -213,12 +361,15 @@ export function CustomOrder() {
                   name="budget"
                   required
                   min="4000"
+                  max="500000"
                   placeholder="16000"
                   value={formData.budget}
                   onChange={handleInputChange}
-                  className={`mt-1 block w-full rounded-lg border ${errors.budget ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                  className={`mt-1 block w-full rounded-lg border ${fieldErrors.budget ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
                 />
-                {errors.budget && <p className="mt-1 text-sm text-red-600">{errors.budget}</p>}
+                <p className="mt-1 text-xs text-[#8C7B00]">
+                  Minimum: ₹4,000 | Maximum: ₹5,00,000
+                </p>
               </div>
             </div>
           </div>
@@ -270,7 +421,8 @@ export function CustomOrder() {
                     <img
                       src={preview || "/placeholder.svg"}
                       alt={`Reference ${index + 1}`}
-                      className="h-24 w-full rounded-lg object-cover"
+                      className="h-24 w-full rounded-lg object-cover cursor-pointer transition-transform hover:scale-105"
+                      onClick={() => window.open(preview, '_blank')}
                     />
                     <button
                       type="button"
@@ -307,9 +459,9 @@ export function CustomOrder() {
                 required
                 value={formData.name}
                 onChange={handleInputChange}
-                className={`mt-1 block w-full rounded-lg border ${errors.name ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                className={`mt-1 block w-full rounded-lg border ${fieldErrors.name ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                placeholder="Enter your full name"
               />
-              {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-[#4A3F00]">Email</label>
@@ -319,9 +471,9 @@ export function CustomOrder() {
                 required
                 value={formData.email}
                 onChange={handleInputChange}
-                className={`mt-1 block w-full rounded-lg border ${errors.email ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                className={`mt-1 block w-full rounded-lg border ${fieldErrors.email ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                placeholder="Enter your email"
               />
-              {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
             </div>
             <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-[#4A3F00]">Phone Number</label>
@@ -331,9 +483,9 @@ export function CustomOrder() {
                 required
                 value={formData.phone}
                 onChange={handleInputChange}
-                className={`mt-1 block w-full rounded-lg border ${errors.phone ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                className={`mt-1 block w-full rounded-lg border ${fieldErrors.phone ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                placeholder="Enter your phone number"
               />
-              {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
             </div>
           </div>
         </div>

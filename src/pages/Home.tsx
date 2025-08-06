@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom"
 import { ProductCard } from "../components/ProductCard"
-import { ArtistSVG } from "../components/ArtistSVG"
 import { useAdmin } from "../contexts/AdminContext"
 
 export function Home() {
@@ -57,12 +56,12 @@ export function Home() {
       {/* Featured Artworks */}
       <section className="py-12">
         <div className="flex items-center justify-between mb-6 px-4">
-          <h2 className="text-3xl font-bold leading-tight tracking-tight text-[#4A3F00] dark:text-white">
+          <h2 className="text-3xl font-bold leading-tight tracking-tight text-[#4A3F00]">
             Featured Artworks
           </h2>
           <Link 
             to="/paintings" 
-            className="text-sm font-medium text-[#4A3F00] dark:text-white hover:text-[#FFDE59] transition-colors no-underline"
+            className="text-sm font-medium text-[#4A3F00] hover:text-[#FFDE59] transition-colors no-underline"
           >
             View All →
           </Link>
@@ -83,14 +82,14 @@ export function Home() {
       </section>
 
       {/* Featured Crafts */}
-      <section className="my-8 rounded-2xl bg-[#FFF5CC] dark:bg-gray-800 py-12 transition-colors duration-300">
+      <section className="my-8 rounded-2xl bg-[#FFF5CC] py-12">
         <div className="flex items-center justify-between mb-6 px-4">
-          <h2 className="text-3xl font-bold leading-tight tracking-tight text-[#4A3F00] dark:text-white">
+          <h2 className="text-3xl font-bold leading-tight tracking-tight text-[#4A3F00]">
             Featured Crafts
           </h2>
           <Link 
             to="/crafts" 
-            className="text-sm font-medium text-[#4A3F00] dark:text-white hover:text-[#FFDE59] transition-colors no-underline"
+            className="text-sm font-medium text-[#4A3F00] hover:text-[#FFDE59] transition-colors no-underline"
           >
             View All →
           </Link>
@@ -113,12 +112,12 @@ export function Home() {
       {/* Featured Tote Bags */}
       <section className="py-12">
         <div className="flex items-center justify-between mb-6 px-4">
-          <h2 className="text-3xl font-bold leading-tight tracking-tight text-[#4A3F00] dark:text-white">
+          <h2 className="text-3xl font-bold leading-tight tracking-tight text-[#4A3F00]">
             Featured Tote Bags
           </h2>
           <Link 
             to="/tote-bags" 
-            className="text-sm font-medium text-[#4A3F00] dark:text-white hover:text-[#FFDE59] transition-colors no-underline"
+            className="text-sm font-medium text-[#4A3F00] hover:text-[#FFDE59] transition-colors no-underline"
           >
             View All →
           </Link>
@@ -140,10 +139,16 @@ export function Home() {
 
       {/* About the Artist */}
       <section className="py-12 px-4 text-center">
-        <h2 className="mb-4 text-3xl font-bold leading-tight tracking-tight text-[#4A3F00] dark:text-white">About the Artist</h2>
+        <h2 className="mb-4 text-3xl font-bold leading-tight tracking-tight text-[#4A3F00]">About the Artist</h2>
         <div className="mx-auto max-w-3xl text-center">
-          <ArtistSVG />
-          <p className="mb-6 text-lg font-normal leading-relaxed text-[#4A3F00] dark:text-gray-300">
+          <div className="mx-auto mb-6 h-32 w-32 overflow-hidden rounded-full border-4 border-[#FFDE59] shadow-lg">
+            <img
+              src="/images/artist-photo.png"
+              alt="Sarah - Artist and Creator"
+              className="h-full w-full object-cover"
+            />
+          </div>
+          <p className="mb-6 text-lg font-normal leading-relaxed text-[#4A3F00]">
             Meet Sarah, the creative force behind Exotika Creation. With a profound passion for creativity and a deep
             love for the natural world, Sarah pours her heart into crafting unique artworks, handmade crafts, and
             stylish tote bags that beautifully reflect her distinct artistic vision. Each piece is meticulously created

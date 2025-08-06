@@ -3,12 +3,14 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
+import { useNotifications } from "../contexts/NotificationContext"
 
 export function Login() {
   const navigate = useNavigate()
+  const { addNotification } = useNotifications()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [errors, setErrors] = useState<{[key: string]: string}>({})
+  const [fieldErrors, setFieldErrors] = useState<{[key: string]: boolean}>({})
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -16,24 +18,53 @@ export function Login() {
   })
 
   const validateForm = () => {
-    const newErrors: {[key: string]: string} = {}
+    const errors: {[key: string]: boolean} = {}
+    let isValid = true
 
     // Email validation
     if (!formData.email) {
-      newErrors.email = "Email is required"
+      errors.email = true
+      addNotification({
+        type: "error",
+        title: "Email Required",
+        message: "Please enter your email address.",
+        duration: 4000,
+      })
+      isValid = false
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address"
+      errors.email = true
+      addNotification({
+        type: "error",
+        title: "Invalid Email",
+        message: "Please enter a valid email address.",
+        duration: 4000,
+      })
+      isValid = false
     }
 
     // Password validation
     if (!formData.password) {
-      newErrors.password = "Password is required"
+      errors.password = true
+      addNotification({
+        type: "error",
+        title: "Password Required",
+        message: "Please enter your password.",
+        duration: 4000,
+      })
+      isValid = false
     } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters long"
+      errors.password = true
+      addNotification({
+        type: "error",
+        title: "Password Too Short",
+        message: "Password must be at least 6 characters long.",
+        duration: 4000,
+      })
+      isValid = false
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    setFieldErrors(errors)
+    return isValid
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,9 +74,9 @@ export function Login() {
       [name]: type === "checkbox" ? checked : value,
     })
     
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: "" }))
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => ({ ...prev, [name]: false }))
     }
   }
 
@@ -61,12 +92,45 @@ export function Login() {
     // Simulate login process
     await new Promise((resolve) => setTimeout(resolve, 1500))
 
-    // For demo purposes, any email/password combination works
-    if (formData.email && formData.password) {
+    // Demo login credentials
+    const validCredentials = [
+      { email: "demo@exotika.com", password: "demo123" },
+      { email: "admin@exotika.com", password: "admin123" },
+      { email: "sarah@exotika.com", password: "artist123" }
+    ]
+
+    const isValidLogin = validCredentials.some(
+      cred => cred.email === formData.email && cred.password === formData.password
+    ) || (formData.email && formData.password.length >= 6) // Fallback for any valid format
+
+    if (isValidLogin) {
+      addNotification({
+        type: "success",
+        title: "Login Successful!",
+        message: "Welcome back to Exotika Creation.",
+        duration: 3000,
+      })
       navigate("/")
+    } else {
+      setFieldErrors({ email: true, password: true })
+      addNotification({
+        type: "error",
+        title: "Login Failed",
+        message: "Invalid credentials. Try demo@exotika.com / demo123",
+        duration: 5000,
+      })
     }
 
     setIsLoading(false)
+  }
+
+  const fillDemoCredentials = () => {
+    setFormData({
+      ...formData,
+      email: "demo@exotika.com",
+      password: "demo123"
+    })
+    setFieldErrors({})
   }
 
   return (
@@ -90,6 +154,22 @@ export function Login() {
           <p className="mt-2 text-[#8C7B00]">Sign in to your account to continue</p>
         </div>
 
+        {/* Demo Notice */}
+        <div className="rounded-lg border border-[#FFDE59] bg-[#FFFBEB] p-4">
+          <h3 className="text-sm font-semibold text-[#4A3F00] mb-2">Demo Login Credentials:</h3>
+          <div className="space-y-1 text-sm text-[#8C7B00]">
+            <div><strong>Email:</strong> demo@exotika.com</div>
+            <div><strong>Password:</strong> demo123</div>
+          </div>
+          <button
+            type="button"
+            onClick={fillDemoCredentials}
+            className="mt-3 w-full rounded-md bg-[#FFDE59] px-3 py-2 text-sm font-medium text-[#4A3F00] transition-opacity hover:opacity-90"
+          >
+            Use Demo Credentials
+          </button>
+        </div>
+
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="rounded-lg border border-[#FFF5CC] bg-white p-6 shadow-sm">
@@ -105,11 +185,10 @@ export function Login() {
                     required
                     value={formData.email}
                     onChange={handleInputChange}
-                    className={`block w-full rounded-lg border ${errors.email ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] pl-10 pr-3 py-2 text-[#4A3F00] placeholder-[#8C7B00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                    className={`block w-full rounded-lg border ${fieldErrors.email ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] pl-10 pr-3 py-2 text-[#4A3F00] placeholder-[#8C7B00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
                     placeholder="Enter your email"
                   />
                 </div>
-                {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
               </div>
 
               {/* Password Field */}
@@ -123,7 +202,7 @@ export function Login() {
                     required
                     value={formData.password}
                     onChange={handleInputChange}
-                    className={`block w-full rounded-lg border ${errors.password ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] pl-10 pr-10 py-2 text-[#4A3F00] placeholder-[#8C7B00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                    className={`block w-full rounded-lg border ${fieldErrors.password ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] pl-10 pr-10 py-2 text-[#4A3F00] placeholder-[#8C7B00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
                     placeholder="Enter your password"
                   />
                   <button
@@ -134,7 +213,6 @@ export function Login() {
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
-                {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
               </div>
 
               {/* Remember Me & Forgot Password */}
@@ -182,10 +260,12 @@ export function Login() {
           </div>
         </form>
 
-        {/* Demo Notice */}
+        {/* Additional Demo Info */}
         <div className="rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] p-4 text-center">
           <p className="text-sm text-[#8C7B00]">
-            <strong>Demo Mode:</strong> Use any valid email and password (6+ characters) to sign in
+            <strong>Other Demo Accounts:</strong><br />
+            admin@exotika.com / admin123<br />
+            sarah@exotika.com / artist123
           </p>
         </div>
       </div>

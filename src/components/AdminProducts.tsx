@@ -5,13 +5,16 @@ import type React from "react"
 import { useState } from "react"
 import { Plus, Edit, Trash2, Package, Upload } from 'lucide-react'
 import { useAdmin, type Product } from "../contexts/AdminContext"
+import { useNotifications } from "../contexts/NotificationContext"
 
 export function AdminProducts() {
   const { state, dispatch } = useAdmin()
+  const { addNotification } = useNotifications()
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>("")
+  const [fieldErrors, setFieldErrors] = useState<{[key: string]: boolean}>({})
 
   const [formData, setFormData] = useState({
     title: "",
@@ -41,36 +44,196 @@ export function AdminProducts() {
     setImagePreview("")
     setShowAddForm(false)
     setEditingProduct(null)
+    setFieldErrors({})
+  }
+
+  const validateForm = () => {
+    const errors: {[key: string]: boolean} = {}
+    let isValid = true
+
+    // Title validation
+    if (!formData.title.trim()) {
+      errors.title = true
+      addNotification({
+        type: "error",
+        title: "Title Required",
+        message: "Please enter a product title.",
+        duration: 4000,
+      })
+      isValid = false
+    } else if (formData.title.trim().length < 3) {
+      errors.title = true
+      addNotification({
+        type: "error",
+        title: "Title Too Short",
+        message: "Product title must be at least 3 characters long.",
+        duration: 4000,
+      })
+      isValid = false
+    }
+
+    // Price validation
+    if (!formData.price) {
+      errors.price = true
+      addNotification({
+        type: "error",
+        title: "Price Required",
+        message: "Please enter a product price.",
+        duration: 4000,
+      })
+      isValid = false
+    } else if (Number.parseFloat(formData.price) <= 0) {
+      errors.price = true
+      addNotification({
+        type: "error",
+        title: "Invalid Price",
+        message: "Price must be greater than 0.",
+        duration: 4000,
+      })
+      isValid = false
+    } else if (Number.parseFloat(formData.price) > 1000000) {
+      errors.price = true
+      addNotification({
+        type: "error",
+        title: "Price Too High",
+        message: "Price cannot exceed ₹10,00,000.",
+        duration: 4000,
+      })
+      isValid = false
+    }
+
+    // Image validation
+    if (!formData.image && !imageFile) {
+      errors.image = true
+      addNotification({
+        type: "error",
+        title: "Image Required",
+        message: "Please upload a product image.",
+        duration: 4000,
+      })
+      isValid = false
+    }
+
+    // Description validation (optional but if provided, should be valid)
+    if (formData.description && formData.description.trim().length < 10) {
+      errors.description = true
+      addNotification({
+        type: "error",
+        title: "Description Too Short",
+        message: "Description must be at least 10 characters if provided.",
+        duration: 4000,
+      })
+      isValid = false
+    }
+
+    // Painting-specific validations
+    if (formData.category === "painting") {
+      if (formData.height && !/^\d+(\.\d+)?$/.test(formData.height)) {
+        errors.height = true
+        addNotification({
+          type: "error",
+          title: "Invalid Height",
+          message: "Height must be a valid number.",
+          duration: 4000,
+        })
+        isValid = false
+      }
+      if (formData.width && !/^\d+(\.\d+)?$/.test(formData.width)) {
+        errors.width = true
+        addNotification({
+          type: "error",
+          title: "Invalid Width",
+          message: "Width must be a valid number.",
+          duration: 4000,
+        })
+        isValid = false
+      }
+    }
+
+    setFieldErrors(errors)
+    return isValid
   }
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        addNotification({
+          type: "error",
+          title: "Invalid File Type",
+          message: "Please upload a valid image file.",
+          duration: 4000,
+        })
+        return
+      }
+
+      // Validate file size (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        addNotification({
+          type: "error",
+          title: "File Too Large",
+          message: "Image size must be less than 10MB.",
+          duration: 4000,
+        })
+        return
+      }
+
       setImageFile(file)
       const reader = new FileReader()
       reader.onload = (e) => {
         const result = e.target?.result as string
         setImagePreview(result)
         setFormData({ ...formData, image: result })
+        // Clear image error if it exists
+        if (fieldErrors.image) {
+          setFieldErrors(prev => ({ ...prev, image: false }))
+        }
       }
       reader.readAsDataURL(file)
+
+      addNotification({
+        type: "success",
+        title: "Image Uploaded",
+        message: "Product image uploaded successfully.",
+        duration: 3000,
+      })
+    }
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target
+    const checked = (e.target as HTMLInputElement).checked
+
+    setFormData({
+      ...formData,
+      [name]: type === "checkbox" ? checked : value,
+    })
+
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => ({ ...prev, [name]: false }))
     }
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
+    if (!validateForm()) {
+      return
+    }
+
     const productData = {
-      title: formData.title,
+      title: formData.title.trim(),
       price: Number.parseFloat(formData.price),
       image: formData.image,
-      description: formData.description,
+      description: formData.description.trim(),
       category: formData.category,
       inStock: formData.inStock,
       ...(formData.category === "painting" && {
         height: formData.height,
         width: formData.width,
-        medium: formData.medium,
+        medium: formData.medium.trim(),
       }),
     }
 
@@ -82,10 +245,22 @@ export function AdminProducts() {
           ...productData,
         },
       })
+      addNotification({
+        type: "success",
+        title: "Product Updated!",
+        message: `${productData.title} has been updated successfully.`,
+        duration: 4000,
+      })
     } else {
       dispatch({
         type: "ADD_PRODUCT",
         payload: productData,
+      })
+      addNotification({
+        type: "success",
+        title: "Product Added!",
+        message: `${productData.title} has been added to your catalog.`,
+        duration: 4000,
       })
     }
 
@@ -107,11 +282,18 @@ export function AdminProducts() {
     setImagePreview(product.image)
     setEditingProduct(product)
     setShowAddForm(true)
+    setFieldErrors({})
   }
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this product?")) {
-      dispatch({ type: "DELETE_PRODUCT", payload: id })
+  const handleDelete = (product: Product) => {
+    if (confirm(`Are you sure you want to delete "${product.title}"?`)) {
+      dispatch({ type: "DELETE_PRODUCT", payload: product.id })
+      addNotification({
+        type: "info",
+        title: "Product Deleted",
+        message: `${product.title} has been removed from your catalog.`,
+        duration: 4000,
+      })
     }
   }
 
@@ -141,31 +323,35 @@ export function AdminProducts() {
                 <label className="block text-sm font-medium text-[#4A3F00]">Title</label>
                 <input
                   type="text"
+                  name="title"
                   required
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="mt-1 block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                  onChange={handleInputChange}
+                  className={`mt-1 block w-full rounded-lg border ${fieldErrors.title ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                  placeholder="Enter product title"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-[#4A3F00]">Price (₹)</label>
                 <input
                   type="number"
+                  name="price"
                   required
-                  min="0"
+                  min="1"
+                  max="1000000"
                   step="0.01"
                   value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  className="mt-1 block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                  onChange={handleInputChange}
+                  className={`mt-1 block w-full rounded-lg border ${fieldErrors.price ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                  placeholder="Enter price"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-[#4A3F00]">Category</label>
                 <select
+                  name="category"
                   value={formData.category}
-                  onChange={(e) =>
-                    setFormData({ ...formData, category: e.target.value as "painting" | "craft" | "tote-bag" })
-                  }
+                  onChange={handleInputChange}
                   className="mt-1 block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
                 >
                   <option value="painting">Painting</option>
@@ -185,7 +371,7 @@ export function AdminProducts() {
                   />
                   <label
                     htmlFor="image-upload"
-                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] px-3 py-2 text-sm text-[#4A3F00] hover:bg-[#FFF5CC]"
+                    className={`flex cursor-pointer items-center gap-2 rounded-lg border ${fieldErrors.image ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-sm text-[#4A3F00] hover:bg-[#FFF5CC]`}
                   >
                     <Upload className="h-4 w-4" />
                     Upload Image
@@ -209,9 +395,10 @@ export function AdminProducts() {
                   <label className="block text-sm font-medium text-[#4A3F00]">Height (inches)</label>
                   <input
                     type="text"
+                    name="height"
                     value={formData.height}
-                    onChange={(e) => setFormData({ ...formData, height: e.target.value })}
-                    className="mt-1 block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                    onChange={handleInputChange}
+                    className={`mt-1 block w-full rounded-lg border ${fieldErrors.height ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
                     placeholder="20"
                   />
                 </div>
@@ -219,9 +406,10 @@ export function AdminProducts() {
                   <label className="block text-sm font-medium text-[#4A3F00]">Width (inches)</label>
                   <input
                     type="text"
+                    name="width"
                     value={formData.width}
-                    onChange={(e) => setFormData({ ...formData, width: e.target.value })}
-                    className="mt-1 block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                    onChange={handleInputChange}
+                    className={`mt-1 block w-full rounded-lg border ${fieldErrors.width ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
                     placeholder="16"
                   />
                 </div>
@@ -229,8 +417,9 @@ export function AdminProducts() {
                   <label className="block text-sm font-medium text-[#4A3F00]">Medium</label>
                   <input
                     type="text"
+                    name="medium"
                     value={formData.medium}
-                    onChange={(e) => setFormData({ ...formData, medium: e.target.value })}
+                    onChange={handleInputChange}
                     className="mt-1 block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
                     placeholder="Acrylic on Canvas"
                   />
@@ -241,18 +430,21 @@ export function AdminProducts() {
             <div>
               <label className="block text-sm font-medium text-[#4A3F00]">Description</label>
               <textarea
+                name="description"
                 rows={3}
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="mt-1 block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                onChange={handleInputChange}
+                className={`mt-1 block w-full rounded-lg border ${fieldErrors.description ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                placeholder="Enter product description (optional)"
               />
             </div>
             <div className="flex items-center">
               <input
                 type="checkbox"
                 id="inStock"
+                name="inStock"
                 checked={formData.inStock}
-                onChange={(e) => setFormData({ ...formData, inStock: e.target.checked })}
+                onChange={handleInputChange}
                 className="h-4 w-4 rounded border-[#FFF5CC] text-[#FFDE59] focus:ring-[#FFDE59]"
               />
               <label htmlFor="inStock" className="ml-2 text-sm text-[#4A3F00]">
@@ -316,7 +508,7 @@ export function AdminProducts() {
                   Edit
                 </button>
                 <button
-                  onClick={() => handleDelete(product.id)}
+                  onClick={() => handleDelete(product)}
                   className="flex items-center gap-1 rounded px-3 py-1 text-sm text-red-600 hover:bg-red-50"
                 >
                   <Trash2 className="h-4 w-4" />

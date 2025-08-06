@@ -6,13 +6,15 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useCart } from "../contexts/CartContext"
 import { useAdmin } from "../contexts/AdminContext"
+import { useNotifications } from "../contexts/NotificationContext"
 
 export function Checkout() {
   const { state, dispatch } = useCart()
   const { dispatch: adminDispatch } = useAdmin()
+  const { addNotification } = useNotifications()
   const navigate = useNavigate()
 
-  const [errors, setErrors] = useState<{[key: string]: string}>({})
+  const [fieldErrors, setFieldErrors] = useState<{[key: string]: boolean}>({})
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -25,46 +27,137 @@ export function Checkout() {
   const [isProcessing, setIsProcessing] = useState(false)
 
   const validateForm = () => {
-    const newErrors: {[key: string]: string} = {}
+    const errors: {[key: string]: boolean} = {}
+    let isValid = true
 
     // Name validation
     if (!formData.name.trim()) {
-      newErrors.name = "Full name is required"
+      errors.name = true
+      addNotification({
+        type: "error",
+        title: "Name Required",
+        message: "Please enter your full name.",
+        duration: 4000,
+      })
+      isValid = false
+    } else if (formData.name.trim().length < 2) {
+      errors.name = true
+      addNotification({
+        type: "error",
+        title: "Invalid Name",
+        message: "Name must be at least 2 characters long.",
+        duration: 4000,
+      })
+      isValid = false
     }
 
     // Email validation
     if (!formData.email) {
-      newErrors.email = "Email is required"
+      errors.email = true
+      addNotification({
+        type: "error",
+        title: "Email Required",
+        message: "Please enter your email address.",
+        duration: 4000,
+      })
+      isValid = false
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address"
+      errors.email = true
+      addNotification({
+        type: "error",
+        title: "Invalid Email",
+        message: "Please enter a valid email address.",
+        duration: 4000,
+      })
+      isValid = false
     }
 
     // Phone validation
     if (!formData.phone) {
-      newErrors.phone = "Phone number is required"
-    } else if (!/^[\+]?[1-9][\d]{0,15}$/.test(formData.phone.replace(/[\s\-$$$$]/g, ''))) {
-      newErrors.phone = "Please enter a valid phone number"
+      errors.phone = true
+      addNotification({
+        type: "error",
+        title: "Phone Required",
+        message: "Please enter your phone number.",
+        duration: 4000,
+      })
+      isValid = false
+    } else if (!/^[\+]?[1-9][\d]{9,14}$/.test(formData.phone.replace(/[\s\-()]/g, ''))) {
+      errors.phone = true
+      addNotification({
+        type: "error",
+        title: "Invalid Phone",
+        message: "Please enter a valid phone number.",
+        duration: 4000,
+      })
+      isValid = false
     }
 
     // Address validation
     if (!formData.address.trim()) {
-      newErrors.address = "Address is required"
+      errors.address = true
+      addNotification({
+        type: "error",
+        title: "Address Required",
+        message: "Please enter your delivery address.",
+        duration: 4000,
+      })
+      isValid = false
+    } else if (formData.address.trim().length < 10) {
+      errors.address = true
+      addNotification({
+        type: "error",
+        title: "Address Too Short",
+        message: "Please enter a complete address.",
+        duration: 4000,
+      })
+      isValid = false
     }
 
     // City validation
     if (!formData.city.trim()) {
-      newErrors.city = "City is required"
+      errors.city = true
+      addNotification({
+        type: "error",
+        title: "City Required",
+        message: "Please enter your city.",
+        duration: 4000,
+      })
+      isValid = false
+    } else if (!/^[a-zA-Z\s]+$/.test(formData.city.trim())) {
+      errors.city = true
+      addNotification({
+        type: "error",
+        title: "Invalid City",
+        message: "City name can only contain letters and spaces.",
+        duration: 4000,
+      })
+      isValid = false
     }
 
     // ZIP code validation
     if (!formData.zipCode.trim()) {
-      newErrors.zipCode = "ZIP code is required"
+      errors.zipCode = true
+      addNotification({
+        type: "error",
+        title: "ZIP Code Required",
+        message: "Please enter your ZIP code.",
+        duration: 4000,
+      })
+      isValid = false
     } else if (!/^\d{5,6}$/.test(formData.zipCode.trim())) {
-      newErrors.zipCode = "Please enter a valid ZIP code (5-6 digits)"
+      errors.zipCode = true
+      addNotification({
+        type: "error",
+        title: "Invalid ZIP Code",
+        message: "Please enter a valid 5-6 digit ZIP code.",
+        duration: 4000,
+      })
+      isValid = false
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    setFieldErrors(errors)
+    return isValid
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -75,8 +168,8 @@ export function Checkout() {
     })
     
     // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: "" }))
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => ({ ...prev, [name]: false }))
     }
   }
 
@@ -116,6 +209,13 @@ export function Checkout() {
     // Clear cart
     dispatch({ type: "CLEAR_CART" })
 
+    addNotification({
+      type: "success",
+      title: "Order Placed Successfully!",
+      message: "Thank you for your purchase. You'll receive a confirmation email shortly.",
+      duration: 5000,
+    })
+
     // Navigate to success page
     navigate("/order-success")
   }
@@ -145,9 +245,9 @@ export function Checkout() {
                     required
                     value={formData.name}
                     onChange={handleInputChange}
-                    className={`mt-1 block w-full rounded-lg border ${errors.name ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                    className={`mt-1 block w-full rounded-lg border ${fieldErrors.name ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                    placeholder="Enter your full name"
                   />
-                  {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#4A3F00]">Email</label>
@@ -157,9 +257,9 @@ export function Checkout() {
                     required
                     value={formData.email}
                     onChange={handleInputChange}
-                    className={`mt-1 block w-full rounded-lg border ${errors.email ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                    className={`mt-1 block w-full rounded-lg border ${fieldErrors.email ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                    placeholder="Enter your email"
                   />
-                  {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
                 </div>
                 <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-[#4A3F00]">Phone</label>
@@ -169,9 +269,9 @@ export function Checkout() {
                     required
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className={`mt-1 block w-full rounded-lg border ${errors.phone ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                    className={`mt-1 block w-full rounded-lg border ${fieldErrors.phone ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                    placeholder="Enter your phone number"
                   />
-                  {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
                 </div>
               </div>
             </div>
@@ -188,9 +288,9 @@ export function Checkout() {
                     rows={3}
                     value={formData.address}
                     onChange={handleInputChange}
-                    className={`mt-1 block w-full rounded-lg border ${errors.address ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                    className={`mt-1 block w-full rounded-lg border ${fieldErrors.address ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                    placeholder="Enter your complete address"
                   />
-                  {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address}</p>}
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
@@ -201,9 +301,9 @@ export function Checkout() {
                       required
                       value={formData.city}
                       onChange={handleInputChange}
-                      className={`mt-1 block w-full rounded-lg border ${errors.city ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                      className={`mt-1 block w-full rounded-lg border ${fieldErrors.city ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                      placeholder="Enter your city"
                     />
-                    {errors.city && <p className="mt-1 text-sm text-red-600">{errors.city}</p>}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-[#4A3F00]">ZIP Code</label>
@@ -213,9 +313,9 @@ export function Checkout() {
                       required
                       value={formData.zipCode}
                       onChange={handleInputChange}
-                      className={`mt-1 block w-full rounded-lg border ${errors.zipCode ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                      className={`mt-1 block w-full rounded-lg border ${fieldErrors.zipCode ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                      placeholder="Enter ZIP code"
                     />
-                    {errors.zipCode && <p className="mt-1 text-sm text-red-600">{errors.zipCode}</p>}
                   </div>
                 </div>
               </div>
