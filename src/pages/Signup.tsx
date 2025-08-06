@@ -9,6 +9,7 @@ export function Signup() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [errors, setErrors] = useState<{[key: string]: string}>({})
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -19,30 +20,76 @@ export function Signup() {
     subscribeNewsletter: true,
   })
 
+  const validateForm = () => {
+    const newErrors: {[key: string]: string} = {}
+
+    // Name validation
+    if (!formData.name.trim()) {
+      newErrors.name = "Full name is required"
+    } else if (formData.name.trim().length < 2) {
+      newErrors.name = "Name must be at least 2 characters long"
+    }
+
+    // Email validation
+    if (!formData.email) {
+      newErrors.email = "Email is required"
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address"
+    }
+
+    // Phone validation
+    if (!formData.phone) {
+      newErrors.phone = "Phone number is required"
+    } else if (!/^[\+]?[1-9][\d]{0,15}$/.test(formData.phone.replace(/[\s\-$$$$]/g, ''))) {
+      newErrors.phone = "Please enter a valid phone number"
+    }
+
+    // Password validation
+    if (!formData.password) {
+      newErrors.password = "Password is required"
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters long"
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
+      newErrors.password = "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+    }
+
+    // Confirm password validation
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = "Please confirm your password"
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = "Passwords don't match"
+    }
+
+    // Terms validation
+    if (!formData.agreeToTerms) {
+      newErrors.agreeToTerms = "You must agree to the terms and conditions"
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target
     setFormData({
       ...formData,
       [name]: type === "checkbox" ? checked : value,
     })
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: "" }))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!validateForm()) {
+      return
+    }
+
     setIsLoading(true)
-
-    // Basic validation
-    if (formData.password !== formData.confirmPassword) {
-      alert("Passwords don't match!")
-      setIsLoading(false)
-      return
-    }
-
-    if (!formData.agreeToTerms) {
-      alert("Please agree to the terms and conditions")
-      setIsLoading(false)
-      return
-    }
 
     // Simulate signup process
     await new Promise((resolve) => setTimeout(resolve, 2000))
@@ -88,10 +135,11 @@ export function Signup() {
                     required
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] pl-10 pr-3 py-2 text-[#4A3F00] placeholder-[#8C7B00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                    className={`block w-full rounded-lg border ${errors.name ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] pl-10 pr-3 py-2 text-[#4A3F00] placeholder-[#8C7B00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
                     placeholder="Enter your full name"
                   />
                 </div>
+                {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
               </div>
 
               {/* Email Field */}
@@ -105,10 +153,11 @@ export function Signup() {
                     required
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] pl-10 pr-3 py-2 text-[#4A3F00] placeholder-[#8C7B00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                    className={`block w-full rounded-lg border ${errors.email ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] pl-10 pr-3 py-2 text-[#4A3F00] placeholder-[#8C7B00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
                     placeholder="Enter your email"
                   />
                 </div>
+                {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
               </div>
 
               {/* Phone Field */}
@@ -122,10 +171,11 @@ export function Signup() {
                     required
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] pl-10 pr-3 py-2 text-[#4A3F00] placeholder-[#8C7B00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                    className={`block w-full rounded-lg border ${errors.phone ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] pl-10 pr-3 py-2 text-[#4A3F00] placeholder-[#8C7B00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
                     placeholder="Enter your phone number"
                   />
                 </div>
+                {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
               </div>
 
               {/* Password Field */}
@@ -140,7 +190,7 @@ export function Signup() {
                     minLength={6}
                     value={formData.password}
                     onChange={handleInputChange}
-                    className="block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] pl-10 pr-10 py-2 text-[#4A3F00] placeholder-[#8C7B00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                    className={`block w-full rounded-lg border ${errors.password ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] pl-10 pr-10 py-2 text-[#4A3F00] placeholder-[#8C7B00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
                     placeholder="Create a password"
                   />
                   <button
@@ -151,6 +201,7 @@ export function Signup() {
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
+                {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
               </div>
 
               {/* Confirm Password Field */}
@@ -164,7 +215,7 @@ export function Signup() {
                     required
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className="block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] pl-10 pr-10 py-2 text-[#4A3F00] placeholder-[#8C7B00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                    className={`block w-full rounded-lg border ${errors.confirmPassword ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] pl-10 pr-10 py-2 text-[#4A3F00] placeholder-[#8C7B00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
                     placeholder="Confirm your password"
                   />
                   <button
@@ -175,6 +226,7 @@ export function Signup() {
                     {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
+                {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>}
               </div>
 
               {/* Terms and Newsletter */}
@@ -186,7 +238,7 @@ export function Signup() {
                     required
                     checked={formData.agreeToTerms}
                     onChange={handleInputChange}
-                    className="mt-1 h-4 w-4 rounded border-[#FFF5CC] text-[#FFDE59] focus:ring-[#FFDE59]"
+                    className={`mt-1 h-4 w-4 rounded border-[#FFF5CC] text-[#FFDE59] focus:ring-[#FFDE59] ${errors.agreeToTerms ? 'border-red-500' : ''}`}
                   />
                   <label className="ml-2 text-sm text-[#8C7B00]">
                     I agree to the{" "}
@@ -199,6 +251,7 @@ export function Signup() {
                     </Link>
                   </label>
                 </div>
+                {errors.agreeToTerms && <p className="text-sm text-red-600">{errors.agreeToTerms}</p>}
                 <div className="flex items-center">
                   <input
                     type="checkbox"

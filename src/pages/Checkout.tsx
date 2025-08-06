@@ -12,6 +12,7 @@ export function Checkout() {
   const { dispatch: adminDispatch } = useAdmin()
   const navigate = useNavigate()
 
+  const [errors, setErrors] = useState<{[key: string]: string}>({})
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -23,15 +24,69 @@ export function Checkout() {
 
   const [isProcessing, setIsProcessing] = useState(false)
 
+  const validateForm = () => {
+    const newErrors: {[key: string]: string} = {}
+
+    // Name validation
+    if (!formData.name.trim()) {
+      newErrors.name = "Full name is required"
+    }
+
+    // Email validation
+    if (!formData.email) {
+      newErrors.email = "Email is required"
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address"
+    }
+
+    // Phone validation
+    if (!formData.phone) {
+      newErrors.phone = "Phone number is required"
+    } else if (!/^[\+]?[1-9][\d]{0,15}$/.test(formData.phone.replace(/[\s\-$$$$]/g, ''))) {
+      newErrors.phone = "Please enter a valid phone number"
+    }
+
+    // Address validation
+    if (!formData.address.trim()) {
+      newErrors.address = "Address is required"
+    }
+
+    // City validation
+    if (!formData.city.trim()) {
+      newErrors.city = "City is required"
+    }
+
+    // ZIP code validation
+    if (!formData.zipCode.trim()) {
+      newErrors.zipCode = "ZIP code is required"
+    } else if (!/^\d{5,6}$/.test(formData.zipCode.trim())) {
+      newErrors.zipCode = "Please enter a valid ZIP code (5-6 digits)"
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: value,
     })
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: "" }))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!validateForm()) {
+      return
+    }
+
     setIsProcessing(true)
 
     // Simulate payment processing
@@ -90,8 +145,9 @@ export function Checkout() {
                     required
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                    className={`mt-1 block w-full rounded-lg border ${errors.name ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
                   />
+                  {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#4A3F00]">Email</label>
@@ -101,8 +157,9 @@ export function Checkout() {
                     required
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                    className={`mt-1 block w-full rounded-lg border ${errors.email ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
                   />
+                  {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
                 </div>
                 <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-[#4A3F00]">Phone</label>
@@ -112,8 +169,9 @@ export function Checkout() {
                     required
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                    className={`mt-1 block w-full rounded-lg border ${errors.phone ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
                   />
+                  {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
                 </div>
               </div>
             </div>
@@ -130,8 +188,9 @@ export function Checkout() {
                     rows={3}
                     value={formData.address}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                    className={`mt-1 block w-full rounded-lg border ${errors.address ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
                   />
+                  {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address}</p>}
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
@@ -142,8 +201,9 @@ export function Checkout() {
                       required
                       value={formData.city}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                      className={`mt-1 block w-full rounded-lg border ${errors.city ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
                     />
+                    {errors.city && <p className="mt-1 text-sm text-red-600">{errors.city}</p>}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-[#4A3F00]">ZIP Code</label>
@@ -153,8 +213,9 @@ export function Checkout() {
                       required
                       value={formData.zipCode}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                      className={`mt-1 block w-full rounded-lg border ${errors.zipCode ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
                     />
+                    {errors.zipCode && <p className="mt-1 text-sm text-red-600">{errors.zipCode}</p>}
                   </div>
                 </div>
               </div>

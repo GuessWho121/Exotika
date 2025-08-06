@@ -4,6 +4,7 @@ import { Heart } from 'lucide-react'
 import { useNavigate } from "react-router-dom"
 import { useCart } from "../contexts/CartContext"
 import { useFavorites } from "../contexts/FavoritesContext"
+import { useNotifications } from "../contexts/NotificationContext"
 
 interface ProductCardProps {
   id?: string
@@ -17,6 +18,7 @@ interface ProductCardProps {
 export function ProductCard({ id, title, price, image, description, aspectRatio = "square" }: ProductCardProps) {
   const { dispatch } = useCart()
   const { state: favoritesState, dispatch: favoritesDispatch } = useFavorites()
+  const { addNotification } = useNotifications()
   const navigate = useNavigate()
 
   const aspectClasses = {
@@ -44,6 +46,14 @@ export function ProductCard({ id, title, price, image, description, aspectRatio 
         category: "painting" as const,
       },
     })
+
+    // Show notification
+    addNotification({
+      type: "success",
+      title: "Added to Cart!",
+      message: `${title} has been added to your cart.`,
+      duration: 3000,
+    })
   }
 
   const toggleFavorite = (e: React.MouseEvent) => {
@@ -51,6 +61,15 @@ export function ProductCard({ id, title, price, image, description, aspectRatio 
     favoritesDispatch({
       type: "TOGGLE_FAVORITE",
       payload: productId,
+    })
+
+    // Show notification
+    const isCurrentlyFavorite = favoritesState.favoriteIds.includes(productId)
+    addNotification({
+      type: "info",
+      title: isCurrentlyFavorite ? "Removed from Favorites" : "Added to Favorites",
+      message: `${title} has been ${isCurrentlyFavorite ? "removed from" : "added to"} your favorites.`,
+      duration: 2000,
     })
   }
 
@@ -62,7 +81,7 @@ export function ProductCard({ id, title, price, image, description, aspectRatio 
 
   return (
     <div 
-      className="group flex flex-col overflow-hidden rounded-lg border border-[#FFF5CC] bg-white shadow-sm transition-all hover:shadow-lg hover:border-[#FFDE59] cursor-pointer"
+      className="group flex flex-col overflow-hidden rounded-lg border border-[#FFF5CC] dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm transition-all hover:shadow-lg hover:border-[#FFDE59] cursor-pointer"
       onClick={handleCardClick}
     >
       <div className="relative overflow-hidden">
@@ -72,8 +91,8 @@ export function ProductCard({ id, title, price, image, description, aspectRatio 
         />
         <button 
           onClick={toggleFavorite}
-          className={`absolute right-3 top-3 rounded-full bg-white/80 p-2 transition-colors hover:bg-white ${
-            isFavorite ? 'text-red-500' : 'text-[#8C7B00] hover:text-[#FFDE59]'
+          className={`absolute right-3 top-3 rounded-full bg-white/80 dark:bg-gray-800/80 p-2 transition-colors hover:bg-white dark:hover:bg-gray-800 ${
+            isFavorite ? 'text-red-500' : 'text-[#8C7B00] dark:text-gray-400 hover:text-[#FFDE59]'
           }`}
         >
           <Heart className={`h-5 w-5 ${isFavorite ? 'fill-current' : ''}`} />
@@ -82,11 +101,11 @@ export function ProductCard({ id, title, price, image, description, aspectRatio 
 
       <div className="flex flex-1 flex-col justify-between p-4">
         <div>
-          <h3 className="text-base font-semibold leading-snug text-[#4A3F00] transition-colors group-hover:text-[#FFDE59] truncate">
+          <h3 className="text-base font-semibold leading-snug text-[#4A3F00] dark:text-white transition-colors group-hover:text-[#FFDE59] truncate">
             {title}
           </h3>
-          {description && <p className="mt-1 text-sm font-normal leading-normal text-[#8C7B00]">{description}</p>}
-          <p className="mt-2 text-lg font-bold text-[#4A3F00]">{price}</p>
+          {description && <p className="mt-1 text-sm font-normal leading-normal text-[#8C7B00] dark:text-gray-400">{description}</p>}
+          <p className="mt-2 text-lg font-bold text-[#4A3F00] dark:text-white">{price}</p>
         </div>
 
         <button

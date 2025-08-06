@@ -8,11 +8,33 @@ export function Login() {
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [errors, setErrors] = useState<{[key: string]: string}>({})
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     rememberMe: false,
   })
+
+  const validateForm = () => {
+    const newErrors: {[key: string]: string} = {}
+
+    // Email validation
+    if (!formData.email) {
+      newErrors.email = "Email is required"
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address"
+    }
+
+    // Password validation
+    if (!formData.password) {
+      newErrors.password = "Password is required"
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters long"
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target
@@ -20,10 +42,20 @@ export function Login() {
       ...formData,
       [name]: type === "checkbox" ? checked : value,
     })
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: "" }))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!validateForm()) {
+      return
+    }
+
     setIsLoading(true)
 
     // Simulate login process
@@ -73,10 +105,11 @@ export function Login() {
                     required
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] pl-10 pr-3 py-2 text-[#4A3F00] placeholder-[#8C7B00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                    className={`block w-full rounded-lg border ${errors.email ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] pl-10 pr-3 py-2 text-[#4A3F00] placeholder-[#8C7B00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
                     placeholder="Enter your email"
                   />
                 </div>
+                {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
               </div>
 
               {/* Password Field */}
@@ -90,7 +123,7 @@ export function Login() {
                     required
                     value={formData.password}
                     onChange={handleInputChange}
-                    className="block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] pl-10 pr-10 py-2 text-[#4A3F00] placeholder-[#8C7B00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                    className={`block w-full rounded-lg border ${errors.password ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] pl-10 pr-10 py-2 text-[#4A3F00] placeholder-[#8C7B00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
                     placeholder="Enter your password"
                   />
                   <button
@@ -101,6 +134,7 @@ export function Login() {
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
+                {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
               </div>
 
               {/* Remember Me & Forgot Password */}
@@ -151,7 +185,7 @@ export function Login() {
         {/* Demo Notice */}
         <div className="rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] p-4 text-center">
           <p className="text-sm text-[#8C7B00]">
-            <strong>Demo Mode:</strong> Use any email and password to sign in
+            <strong>Demo Mode:</strong> Use any valid email and password (6+ characters) to sign in
           </p>
         </div>
       </div>

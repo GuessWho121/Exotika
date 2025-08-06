@@ -2,8 +2,9 @@
 
 import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
-import { Search, User, ShoppingBag, Menu, LogIn } from 'lucide-react'
+import { Search, User, ShoppingBag, Menu, LogIn, Moon, Sun } from 'lucide-react'
 import { useCart } from "../contexts/CartContext"
+import { useTheme } from "../contexts/ThemeContext"
 import { CartDrawer } from "./CartDrawer"
 
 export function Header() {
@@ -13,6 +14,7 @@ export function Header() {
   const location = useLocation()
   const navigate = useNavigate()
   const { state } = useCart()
+  const { isDarkMode, toggleDarkMode } = useTheme()
 
   // Mock authentication state - in a real app, this would come from auth context
   const isAuthenticated = false // Change to true to test authenticated state
@@ -53,9 +55,9 @@ export function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 flex items-center justify-between border-b border-[#FFF5CC] bg-[#FFFBEB]/80 px-6 py-4 backdrop-blur-sm md:px-10">
+      <header className="sticky top-0 z-50 flex items-center justify-between border-b border-[#FFF5CC] dark:border-gray-700 bg-[#FFFBEB]/80 dark:bg-gray-900/80 px-6 py-4 backdrop-blur-sm md:px-10 transition-colors duration-300">
         <div className="flex items-center gap-8">
-          <Link to="/" className="flex items-center gap-3 text-[#4A3F00] no-underline">
+          <Link to="/" className="flex items-center gap-3 text-[#4A3F00] dark:text-white no-underline">
             <svg className="h-10 w-10" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
               {/* Outer circle */}
               <circle cx="100" cy="100" r="95" fill="#F4D03F" stroke="#8B4513" strokeWidth="3"/>
@@ -100,7 +102,7 @@ export function Header() {
             <Link
               key={link.href}
               to={link.href}
-              className={`relative text-sm font-medium leading-normal text-[#4A3F00] no-underline transition-colors hover:text-[#FFDE59] ${
+              className={`relative text-sm font-medium leading-normal text-[#4A3F00] dark:text-white no-underline transition-colors hover:text-[#FFDE59] ${
                 isActive(link.href)
                   ? "after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-full after:bg-[#FFDE59]"
                   : ""
@@ -113,58 +115,66 @@ export function Header() {
 
         <div className="flex items-center gap-3">
           <div className="relative hidden md:flex">
-            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[#8C7B00] transition-colors" />
+            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[#8C7B00] dark:text-gray-400 transition-colors" />
             <input
-              className="h-10 w-48 rounded-lg border-none bg-[#FFFBEB] pl-10 pr-4 text-sm font-normal text-[#4A3F00] outline-none transition-all placeholder:text-[#8C7B00] focus:w-64 focus:outline-2 focus:outline-[#FFDE59]"
+              className="h-10 w-48 rounded-lg border-none bg-[#FFFBEB] dark:bg-gray-800 pl-10 pr-4 text-sm font-normal text-[#4A3F00] dark:text-white outline-none transition-all placeholder:text-[#8C7B00] dark:placeholder:text-gray-400 focus:w-64 focus:outline-2 focus:outline-[#FFDE59]"
               placeholder="Search products..."
             />
           </div>
 
-          <button className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FFFBEB] text-[#4A3F00] transition-all hover:bg-[#FFDE59] md:hidden">
+          <button className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FFFBEB] dark:bg-gray-800 text-[#4A3F00] dark:text-white transition-all hover:bg-[#FFDE59] dark:hover:bg-[#FFDE59] dark:hover:text-[#4A3F00] md:hidden">
             <Search className="h-5 w-5" />
+          </button>
+
+          {/* Dark Mode Toggle */}
+          <button
+            onClick={toggleDarkMode}
+            className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FFFBEB] dark:bg-gray-800 text-[#4A3F00] dark:text-white transition-all hover:bg-[#FFDE59] dark:hover:bg-[#FFDE59] dark:hover:text-[#4A3F00]"
+          >
+            {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </button>
 
           {/* User Menu */}
           <div className="relative">
             <button 
               onClick={handleUserClick}
-              className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FFFBEB] text-[#4A3F00] transition-all hover:bg-[#FFDE59]"
+              className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FFFBEB] dark:bg-gray-800 text-[#4A3F00] dark:text-white transition-all hover:bg-[#FFDE59] dark:hover:bg-[#FFDE59] dark:hover:text-[#4A3F00]"
             >
               {isAuthenticated ? <User className="h-5 w-5" /> : <LogIn className="h-5 w-5" />}
             </button>
 
             {/* User Dropdown Menu */}
             {isAuthenticated && isUserMenuOpen && (
-              <div className="absolute right-0 top-12 w-48 rounded-lg border border-[#FFF5CC] bg-white shadow-lg">
+              <div className="absolute right-0 top-12 w-48 rounded-lg border border-[#FFF5CC] dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg">
                 <div className="p-2">
                   <Link
                     to="/profile"
-                    className="block rounded-lg px-3 py-2 text-sm text-[#4A3F00] no-underline hover:bg-[#FFFBEB]"
+                    className="block rounded-lg px-3 py-2 text-sm text-[#4A3F00] dark:text-white no-underline hover:bg-[#FFFBEB] dark:hover:bg-gray-700"
                     onClick={() => setIsUserMenuOpen(false)}
                   >
                     My Profile
                   </Link>
                   <Link
                     to="/profile"
-                    className="block rounded-lg px-3 py-2 text-sm text-[#4A3F00] no-underline hover:bg-[#FFFBEB]"
+                    className="block rounded-lg px-3 py-2 text-sm text-[#4A3F00] dark:text-white no-underline hover:bg-[#FFFBEB] dark:hover:bg-gray-700"
                     onClick={() => setIsUserMenuOpen(false)}
                   >
                     My Orders
                   </Link>
                   <Link
                     to="/profile"
-                    className="block rounded-lg px-3 py-2 text-sm text-[#4A3F00] no-underline hover:bg-[#FFFBEB]"
+                    className="block rounded-lg px-3 py-2 text-sm text-[#4A3F00] dark:text-white no-underline hover:bg-[#FFFBEB] dark:hover:bg-gray-700"
                     onClick={() => setIsUserMenuOpen(false)}
                   >
                     Favorites
                   </Link>
-                  <hr className="my-2 border-[#FFF5CC]" />
+                  <hr className="my-2 border-[#FFF5CC] dark:border-gray-700" />
                   <button
                     onClick={() => {
                       setIsUserMenuOpen(false)
                       // Handle logout
                     }}
-                    className="block w-full rounded-lg px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                    className="block w-full rounded-lg px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                   >
                     Sign Out
                   </button>
@@ -175,7 +185,7 @@ export function Header() {
 
           <button
             onClick={handleCartClick}
-            className="relative flex h-10 w-10 items-center justify-center rounded-lg bg-[#FFFBEB] text-[#4A3F00] transition-all hover:bg-[#FFDE59]"
+            className="relative flex h-10 w-10 items-center justify-center rounded-lg bg-[#FFFBEB] dark:bg-gray-800 text-[#4A3F00] dark:text-white transition-all hover:bg-[#FFDE59] dark:hover:bg-[#FFDE59] dark:hover:text-[#4A3F00]"
           >
             <ShoppingBag className="h-5 w-5" />
             {state.itemCount > 0 && (
@@ -186,7 +196,7 @@ export function Header() {
           </button>
 
           <button
-            className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FFFBEB] text-[#4A3F00] transition-all hover:bg-[#FFDE59] md:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FFFBEB] dark:bg-gray-800 text-[#4A3F00] dark:text-white transition-all hover:bg-[#FFDE59] dark:hover:bg-[#FFDE59] dark:hover:text-[#4A3F00] md:hidden"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             <Menu className="h-5 w-5" />
@@ -195,14 +205,14 @@ export function Header() {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="absolute left-0 right-0 top-full bg-[#FFFBEB] border-b border-[#FFF5CC] md:hidden">
+          <div className="absolute left-0 right-0 top-full bg-[#FFFBEB] dark:bg-gray-900 border-b border-[#FFF5CC] dark:border-gray-700 md:hidden transition-colors duration-300">
             <nav className="flex flex-col p-4 gap-2">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   to={link.href}
-                  className={`text-sm font-medium text-[#4A3F00] no-underline py-2 px-3 rounded-lg transition-colors hover:bg-[#FFF5CC] ${
-                    isActive(link.href) ? "bg-[#FFF5CC] text-[#FFDE59]" : ""
+                  className={`text-sm font-medium text-[#4A3F00] dark:text-white no-underline py-2 px-3 rounded-lg transition-colors hover:bg-[#FFF5CC] dark:hover:bg-gray-800 ${
+                    isActive(link.href) ? "bg-[#FFF5CC] dark:bg-gray-800 text-[#FFDE59]" : ""
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
@@ -213,14 +223,14 @@ export function Header() {
                 <>
                   <Link
                     to="/login"
-                    className="text-sm font-medium text-[#4A3F00] no-underline py-2 px-3 rounded-lg transition-colors hover:bg-[#FFF5CC]"
+                    className="text-sm font-medium text-[#4A3F00] dark:text-white no-underline py-2 px-3 rounded-lg transition-colors hover:bg-[#FFF5CC] dark:hover:bg-gray-800"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Sign In
                   </Link>
                   <Link
                     to="/signup"
-                    className="text-sm font-medium text-[#4A3F00] no-underline py-2 px-3 rounded-lg transition-colors hover:bg-[#FFF5CC]"
+                    className="text-sm font-medium text-[#4A3F00] dark:text-white no-underline py-2 px-3 rounded-lg transition-colors hover:bg-[#FFF5CC] dark:hover:bg-gray-800"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Sign Up
@@ -229,7 +239,7 @@ export function Header() {
               ) : (
                 <Link
                   to="/profile"
-                  className="text-sm font-medium text-[#4A3F00] no-underline py-2 px-3 rounded-lg transition-colors hover:bg-[#FFF5CC]"
+                  className="text-sm font-medium text-[#4A3F00] dark:text-white no-underline py-2 px-3 rounded-lg transition-colors hover:bg-[#FFF5CC] dark:hover:bg-gray-800"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Profile

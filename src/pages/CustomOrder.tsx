@@ -11,6 +11,7 @@ export function CustomOrder() {
   const { dispatch } = useAdmin()
   const navigate = useNavigate()
 
+  const [errors, setErrors] = useState<{[key: string]: string}>({})
   const [formData, setFormData] = useState({
     type: "painting" as "painting" | "craft",
     description: "",
@@ -25,20 +26,79 @@ export function CustomOrder() {
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  const validateForm = () => {
+    const newErrors: {[key: string]: string} = {}
+
+    // Description validation
+    if (!formData.description.trim()) {
+      newErrors.description = "Description is required"
+    } else if (formData.description.trim().length < 20) {
+      newErrors.description = "Description must be at least 20 characters long"
+    }
+
+    // Budget validation
+    if (!formData.budget) {
+      newErrors.budget = "Budget is required"
+    } else if (Number.parseFloat(formData.budget) < 4000) {
+      newErrors.budget = "Minimum budget is ₹4,000"
+    }
+
+    // Name validation
+    if (!formData.name.trim()) {
+      newErrors.name = "Full name is required"
+    }
+
+    // Email validation
+    if (!formData.email) {
+      newErrors.email = "Email is required"
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address"
+    }
+
+    // Phone validation
+    if (!formData.phone) {
+      newErrors.phone = "Phone number is required"
+    } else if (!/^[\+]?[1-9][\d]{0,15}$/.test(formData.phone.replace(/[\s\-$$$$]/g, ''))) {
+      newErrors.phone = "Please enter a valid phone number"
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: value,
     })
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: "" }))
+    }
   }
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     if (files.length === 0) return
 
+    // Validate file types and sizes
+    const validFiles = files.filter(file => {
+      if (!file.type.startsWith('image/')) {
+        alert(`${file.name} is not a valid image file`)
+        return false
+      }
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        alert(`${file.name} is too large. Maximum size is 10MB`)
+        return false
+      }
+      return true
+    })
+
     // Limit to 5 images total
     const remainingSlots = 5 - referenceImages.length
-    const filesToAdd = files.slice(0, remainingSlots)
+    const filesToAdd = validFiles.slice(0, remainingSlots)
 
     setReferenceImages(prev => [...prev, ...filesToAdd])
 
@@ -60,6 +120,11 @@ export function CustomOrder() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!validateForm()) {
+      return
+    }
+
     setIsSubmitting(true)
 
     // Simulate form submission
@@ -122,8 +187,9 @@ export function CustomOrder() {
                 placeholder="Please describe your vision in detail. Include colors, style, subject matter, and any specific requirements..."
                 value={formData.description}
                 onChange={handleInputChange}
-                className="mt-1 block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                className={`mt-1 block w-full rounded-lg border ${errors.description ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
               />
+              {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -150,8 +216,9 @@ export function CustomOrder() {
                   placeholder="16000"
                   value={formData.budget}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                  className={`mt-1 block w-full rounded-lg border ${errors.budget ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
                 />
+                {errors.budget && <p className="mt-1 text-sm text-red-600">{errors.budget}</p>}
               </div>
             </div>
           </div>
@@ -162,7 +229,7 @@ export function CustomOrder() {
           <h2 className="mb-4 text-xl font-semibold text-[#4A3F00]">Reference Images</h2>
           <p className="mb-4 text-sm text-[#8C7B00]">
             Upload any images that can help us understand your vision better. This could include inspiration photos, 
-            color palettes, existing artworks, or sketches. (Maximum 5 images)
+            color palettes, existing artworks, or sketches. (Maximum 5 images, 10MB each)
           </p>
           
           <div className="space-y-4">
@@ -240,8 +307,9 @@ export function CustomOrder() {
                 required
                 value={formData.name}
                 onChange={handleInputChange}
-                className="mt-1 block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                className={`mt-1 block w-full rounded-lg border ${errors.name ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
               />
+              {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-[#4A3F00]">Email</label>
@@ -251,8 +319,9 @@ export function CustomOrder() {
                 required
                 value={formData.email}
                 onChange={handleInputChange}
-                className="mt-1 block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                className={`mt-1 block w-full rounded-lg border ${errors.email ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
               />
+              {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
             </div>
             <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-[#4A3F00]">Phone Number</label>
@@ -262,8 +331,9 @@ export function CustomOrder() {
                 required
                 value={formData.phone}
                 onChange={handleInputChange}
-                className="mt-1 block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                className={`mt-1 block w-full rounded-lg border ${errors.phone ? 'border-red-500' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
               />
+              {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
             </div>
           </div>
         </div>

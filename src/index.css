@@ -67,16 +67,15 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  @apply bg-gray-100 dark:bg-gray-800;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #ffde59;
-  border-radius: 4px;
+  @apply bg-[#FFDE59] rounded;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #4a3f00;
+  @apply bg-[#4A3F00] dark:bg-[#FFDE59];
 }
 
 /* Line clamp utility */
@@ -92,4 +91,24 @@
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* Animation utilities */
+@keyframes slide-in-from-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-in {
+  animation-fill-mode: both;
+}
+
+.slide-in-from-right {
+  animation: slide-in-from-right 0.3s ease-out;
 }
