@@ -10,6 +10,7 @@ import { Home } from "./pages/Home"
 import { Paintings } from "./pages/Paintings"
 import { Crafts } from "./pages/Crafts"
 import { ToteBags } from "./pages/ToteBags"
+import { Apparel } from "./pages/Apparel"
 import { Cart } from "./pages/Cart"
 import { Checkout } from "./pages/Checkout"
 import { OrderSuccess } from "./pages/OrderSuccess"
@@ -38,6 +39,7 @@ function App() {
                       <Route path="/paintings" element={<Paintings />} />
                       <Route path="/crafts" element={<Crafts />} />
                       <Route path="/tote-bags" element={<ToteBags />} />
+                      <Route path="/apparel" element={<Apparel />} />
                       <Route path="/cart" element={<Cart />} />
                       <Route path="/checkout" element={<Checkout />} />
                       <Route path="/order-success" element={<OrderSuccess />} />

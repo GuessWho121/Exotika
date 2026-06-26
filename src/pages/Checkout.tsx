@@ -1,12 +1,15 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useCart } from "../contexts/CartContext"
 import { useAdmin } from "../contexts/AdminContext"
 import { useNotifications } from "../contexts/NotificationContext"
+import { Button } from "../components/ui/button"
+import { Input } from "../components/ui/input"
+import { Textarea } from "../components/ui/textarea"
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "../components/ui/card"
 
 export function Checkout() {
   const { state, dispatch } = useCart()
@@ -30,7 +33,6 @@ export function Checkout() {
     const errors: {[key: string]: boolean} = {}
     let isValid = true
 
-    // Name validation
     if (!formData.name.trim()) {
       errors.name = true
       addNotification({
@@ -51,7 +53,6 @@ export function Checkout() {
       isValid = false
     }
 
-    // Email validation
     if (!formData.email) {
       errors.email = true
       addNotification({
@@ -72,7 +73,6 @@ export function Checkout() {
       isValid = false
     }
 
-    // Phone validation (exactly 10 digits)
     if (!formData.phone) {
       errors.phone = true
       addNotification({
@@ -93,7 +93,6 @@ export function Checkout() {
       isValid = false
     }
 
-    // Address validation
     if (!formData.address.trim()) {
       errors.address = true
       addNotification({
@@ -114,7 +113,6 @@ export function Checkout() {
       isValid = false
     }
 
-    // City validation
     if (!formData.city.trim()) {
       errors.city = true
       addNotification({
@@ -135,7 +133,6 @@ export function Checkout() {
       isValid = false
     }
 
-    // ZIP code validation
     if (!formData.zipCode.trim()) {
       errors.zipCode = true
       addNotification({
@@ -166,7 +163,6 @@ export function Checkout() {
       ...formData,
       [name]: value,
     })
-    // Clear field error when user starts typing
     if (fieldErrors[name]) {
       setFieldErrors(prev => ({ ...prev, [name]: false }))
     }
@@ -184,7 +180,6 @@ export function Checkout() {
     // Simulate payment processing
     await new Promise((resolve) => setTimeout(resolve, 2000))
 
-    // Create transaction
     adminDispatch({
       type: "ADD_TRANSACTION",
       payload: {
@@ -205,7 +200,6 @@ export function Checkout() {
       },
     })
 
-    // Clear cart
     dispatch({ type: "CLEAR_CART" })
 
     addNotification({
@@ -215,7 +209,6 @@ export function Checkout() {
       duration: 5000,
     })
 
-    // Navigate to success page
     navigate("/order-success")
   }
 
@@ -233,124 +226,134 @@ export function Checkout() {
         <div>
           <form onSubmit={handleSubmit} noValidate className="space-y-6">
             {/* Customer Information */}
-            <div className="rounded-lg border border-[#FFF5CC] bg-white p-6 shadow-sm">
-              <h2 className="mb-4 text-xl font-semibold text-[#4A3F00]">Customer Information</h2>
-              <div className="grid gap-4 sm:grid-cols-2">
+            <Card className="border-[#FFF5CC]">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold text-[#4A3F00]">Customer Information</CardTitle>
+                <CardDescription className="text-[#8C7B00]">Provide your basic identity and contact details.</CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-[#4A3F00]">Full Name</label>
-                  <input
+                  <label className="block mb-1.5 text-sm font-medium text-[#4A3F00]">Full Name</label>
+                  <Input
                     type="text"
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    className={`mt-1 block w-full rounded-lg border ${fieldErrors.name ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                    className={fieldErrors.name ? 'border-red-500 bg-red-50 focus:ring-red-500' : 'border-[#FFF5CC] bg-[#FFFBEB] text-[#4A3F00] focus:ring-[#FFDE59]'}
                     placeholder="Enter your full name"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#4A3F00]">Email</label>
-                  <input
+                  <label className="block mb-1.5 text-sm font-medium text-[#4A3F00]">Email</label>
+                  <Input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className={`mt-1 block w-full rounded-lg border ${fieldErrors.email ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                    className={fieldErrors.email ? 'border-red-500 bg-red-50 focus:ring-red-500' : 'border-[#FFF5CC] bg-[#FFFBEB] text-[#4A3F00] focus:ring-[#FFDE59]'}
                     placeholder="Enter your email"
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-[#4A3F00]">Phone</label>
-                  <input
+                  <label className="block mb-1.5 text-sm font-medium text-[#4A3F00]">Phone</label>
+                  <Input
                     type="tel"
                     name="phone"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className={`mt-1 block w-full rounded-lg border ${fieldErrors.phone ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                    className={fieldErrors.phone ? 'border-red-500 bg-red-50 focus:ring-red-500' : 'border-[#FFF5CC] bg-[#FFFBEB] text-[#4A3F00] focus:ring-[#FFDE59]'}
                     placeholder="Enter your 10-digit mobile number"
                   />
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
             {/* Shipping Address */}
-            <div className="rounded-lg border border-[#FFF5CC] bg-white p-6 shadow-sm">
-              <h2 className="mb-4 text-xl font-semibold text-[#4A3F00]">Shipping Address</h2>
-              <div className="space-y-4">
+            <Card className="border-[#FFF5CC]">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold text-[#4A3F00]">Shipping Address</CardTitle>
+                <CardDescription className="text-[#8C7B00]">Where would you like us to deliver your order?</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#4A3F00]">Address</label>
-                  <textarea
+                  <label className="block mb-1.5 text-sm font-medium text-[#4A3F00]">Address</label>
+                  <Textarea
                     name="address"
                     rows={3}
                     value={formData.address}
                     onChange={handleInputChange}
-                    className={`mt-1 block w-full rounded-lg border ${fieldErrors.address ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                    className={fieldErrors.address ? 'border-red-500 bg-red-50 focus:ring-red-500' : 'border-[#FFF5CC] bg-[#FFFBEB] text-[#4A3F00] focus:ring-[#FFDE59]'}
                     placeholder="Enter your complete address"
                   />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-[#4A3F00]">City</label>
-                    <input
+                    <label className="block mb-1.5 text-sm font-medium text-[#4A3F00]">City</label>
+                    <Input
                       type="text"
                       name="city"
                       value={formData.city}
                       onChange={handleInputChange}
-                      className={`mt-1 block w-full rounded-lg border ${fieldErrors.city ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                      className={fieldErrors.city ? 'border-red-500 bg-red-50 focus:ring-red-500' : 'border-[#FFF5CC] bg-[#FFFBEB] text-[#4A3F00] focus:ring-[#FFDE59]'}
                       placeholder="Enter your city"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#4A3F00]">ZIP Code</label>
-                    <input
+                    <label className="block mb-1.5 text-sm font-medium text-[#4A3F00]">ZIP Code</label>
+                    <Input
                       type="text"
                       name="zipCode"
                       value={formData.zipCode}
                       onChange={handleInputChange}
-                      className={`mt-1 block w-full rounded-lg border ${fieldErrors.zipCode ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                      className={fieldErrors.zipCode ? 'border-red-500 bg-red-50 focus:ring-red-500' : 'border-[#FFF5CC] bg-[#FFFBEB] text-[#4A3F00] focus:ring-[#FFDE59]'}
                       placeholder="Enter ZIP code"
                     />
                   </div>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
-            <button
+            <Button
               type="submit"
               disabled={isProcessing}
-              className="w-full rounded-lg bg-[#FFDE59] px-4 py-3 font-semibold text-[#4A3F00] transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="w-full h-12 text-md font-semibold"
             >
               {isProcessing ? "Processing..." : `Pay ₹${state.total.toFixed(2)}`}
-            </button>
+            </Button>
           </form>
         </div>
 
         {/* Order Summary */}
         <div>
-          <div className="rounded-lg border border-[#FFF5CC] bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-xl font-semibold text-[#4A3F00]">Order Summary</h2>
-            <div className="space-y-4">
-              {state.items.map((item) => (
-                <div key={item.id} className="flex gap-3">
-                  <img
-                    src={item.image || "/placeholder.svg"}
-                    alt={item.title}
-                    className="h-16 w-16 rounded-lg object-cover"
-                  />
-                  <div className="flex-1">
-                    <h3 className="font-medium text-[#4A3F00]">{item.title}</h3>
-                    <p className="text-sm text-[#8C7B00]">Qty: {item.quantity}</p>
-                    <p className="text-sm font-medium text-[#4A3F00]">₹{(item.price * item.quantity).toFixed(2)}</p>
+          <Card className="border-[#FFF5CC]">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold text-[#4A3F00]">Order Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-4">
+                {state.items.map((item) => (
+                  <div key={item.id} className="flex gap-3">
+                    <img
+                      src={item.image || "/placeholder.svg"}
+                      alt={item.title}
+                      className="h-16 w-16 rounded-lg object-cover"
+                    />
+                    <div className="flex-1">
+                      <h3 className="font-medium text-[#4A3F00]">{item.title}</h3>
+                      <p className="text-sm text-[#8C7B00]">Qty: {item.quantity}</p>
+                      <p className="text-sm font-medium text-[#4A3F00]">₹{(item.price * item.quantity).toFixed(2)}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-6 border-t border-[#FFF5CC] pt-4">
-              <div className="flex justify-between text-lg font-semibold text-[#4A3F00]">
-                <span>Total</span>
-                <span>₹{state.total.toFixed(2)}</span>
+                ))}
               </div>
-            </div>
-          </div>
+              <div className="mt-6 border-t border-[#FFF5CC] pt-4">
+                <div className="flex justify-between text-lg font-semibold text-[#4A3F00]">
+                  <span>Total</span>
+                  <span>₹{state.total.toFixed(2)}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

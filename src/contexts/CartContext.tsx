@@ -10,7 +10,7 @@ export interface CartItem {
   price: number
   image: string
   quantity: number
-  category: "painting" | "craft" | "tote-bag"
+  category: "painting" | "craft" | "tote-bag" | "apparel"
 }
 
 interface CartState {

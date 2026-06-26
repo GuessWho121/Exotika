@@ -10,7 +10,7 @@ title: string
 price: number
 image: string
 description?: string
-category: "painting" | "craft" | "tote-bag"
+category: "painting" | "craft" | "tote-bag" | "apparel"
 inStock: boolean
 createdAt: Date
 // Additional fields for paintings
@@ -110,6 +110,39 @@ const initialProducts: Product[] = [
   category: "tote-bag",
   inStock: true,
   createdAt: new Date("2024-01-25"),
+},
+{
+  id: "4",
+  title: "Royal Kora Silk Saree",
+  price: 12500,
+  image:
+    "https://lh3.googleusercontent.com/aida-public/AB6AXuCQXUUOu8-Ftxlj8LN_4MLnolOEWM838mOfrJi7oXk9dMFcN_rus5L5fhypsp3oTu89tKlE1UE3fMY_kpx_aHjbDlrFT7KBoQ1Bfd-T2-iz2qx1StCNV2dNySE7IwBrVmUgHiTve1-kXSk165bS-HxerPVVOK0k5Nx67tLyyqzbVpnDl2r_nHJfJABsdM-QUx4dJpZByiVvOIflPKMqaYYVpRc2c9nWBay5V9gGIRuES59Wu7I3--zKZCGtAXX9o4JS6d5uxu10M2yQ",
+  category: "apparel",
+  inStock: true,
+  createdAt: new Date("2024-02-01"),
+  description: "Exquisite hand-woven Kora silk saree featuring traditional gold zari borders and a rich pallu. Perfect for festive celebrations and weddings."
+},
+{
+  id: "5",
+  title: "Hand-Embroidered Anarkali Kurta",
+  price: 4800,
+  image:
+    "https://lh3.googleusercontent.com/aida-public/AB6AXuCWhaAhSnzROQO65Ls7V8WOBWoQvUowtQc6afr-mJpB28BvHKIPoYZtDWHS-L7HTtLK1x3WVxhfO2c88w76keXDO9fFq8nBesMq3-xWxSOlGgx9O_283gPrEVjqd-uSudzaldRJGCtEX9Jj8eBBKzTeCk-_SBAP_dxThVFwoi8jZ3RR91uWuef94TJoQ3yPwNE8HpOltcdijf4eHeOVkUtx1ICgxY9ugrB-DX1dBNGkm2fRDM-qM-apabS0bIodBpwo78wmynQ-9Qjt",
+  category: "apparel",
+  inStock: true,
+  createdAt: new Date("2024-02-05"),
+  description: "Elegant floor-length Anarkali kurta crafted from premium cotton with delicate Chikankari embroidery. Designed for comfort and high-end style."
+},
+{
+  id: "6",
+  title: "Chanderi Handloom Dupatta",
+  price: 2100,
+  image:
+    "https://lh3.googleusercontent.com/aida-public/AB6AXuCPq7r7Zc_62QlWRGfVq2E81FmWGpCWCfdIO3RghgDn_Zdcu9e7Wwu0-Jids6xuc8-_NunsHE814Y90nmV5JR13av-CHX0i6AgJjrA_42DuExbqZLUPloD6S13XOw-xE22VOkX0amWoaaQZ5nrjm7z11dKC9X3uAkKHdcSSO_Nl0cYtTammHcu7wlGNvmsvtwyOLlYGaqZQwAw1gvphLDRRJZuzuAqLwIIU4nMNGtomk42CP7Ej8VRLZahnzLLNM07Cn5T_zv8y8kY-",
+  category: "apparel",
+  inStock: true,
+  createdAt: new Date("2024-02-10"),
+  description: "A lightweight, semi-sheer Chanderi cotton-silk dupatta adorned with intricate hand-painted floral motifs and zari borders."
 },
 ]
 

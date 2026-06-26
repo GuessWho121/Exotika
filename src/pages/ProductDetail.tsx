@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { Heart, ShoppingCart, Star, Truck, Shield, RotateCcw, Share2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useCart } from "../contexts/CartContext"
@@ -8,6 +8,8 @@ import { useAdmin } from "../contexts/AdminContext"
 import { useFavorites } from "../contexts/FavoritesContext"
 import { ProductCard } from "../components/ProductCard"
 import { Breadcrumbs } from "../components/Breadcrumbs"
+import { Button } from "../components/ui/button"
+import { Skeleton } from "../components/ui/skeleton"
 
 export function ProductDetail() {
   const { id } = useParams<{ id: string }>()
@@ -18,6 +20,16 @@ export function ProductDetail() {
   
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [quantity, setQuantity] = useState(1)
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Simulate loading state on route change
+  useEffect(() => {
+    setIsLoading(true)
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [id])
 
   // Find the product by ID
   const product = state.products.find(p => p.id === id)
@@ -35,18 +47,77 @@ export function ProductDetail() {
     .filter(p => p.id !== id && p.category === product?.category)
     .slice(0, 4)
 
+  if (isLoading) {
+    return (
+      <div className="flex w-full max-w-7xl flex-1 flex-col">
+        {/* Breadcrumb Skeleton */}
+        <div className="mb-6 flex gap-2">
+          <Skeleton className="h-4 w-12" />
+          <span className="text-gray-300">/</span>
+          <Skeleton className="h-4 w-20" />
+          <span className="text-gray-300">/</span>
+          <Skeleton className="h-4 w-32" />
+        </div>
+
+        <div className="grid gap-8 lg:grid-cols-2">
+          {/* Image Skeletons */}
+          <div className="space-y-4">
+            <Skeleton className="aspect-square w-full rounded-lg" />
+            <div className="flex gap-2">
+              <Skeleton className="h-20 w-20 rounded-lg" />
+              <Skeleton className="h-20 w-20 rounded-lg" />
+              <Skeleton className="h-20 w-20 rounded-lg" />
+            </div>
+          </div>
+
+          {/* Info Skeletons */}
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <Skeleton className="h-6 w-20 rounded-full" />
+                <Skeleton className="h-6 w-24 rounded-full" />
+              </div>
+              <Skeleton className="h-10 w-3/4" />
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-8 w-24" />
+            </div>
+
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-16" />
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-9 w-9 rounded-lg" />
+                  <Skeleton className="h-6 w-8" />
+                  <Skeleton className="h-9 w-9 rounded-lg" />
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <Skeleton className="h-12 flex-1 rounded-lg" />
+                <Skeleton className="h-12 w-12 rounded-lg" />
+                <Skeleton className="h-12 w-12 rounded-lg" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (!product) {
     return (
       <div className="flex w-full max-w-7xl flex-1 flex-col items-center justify-center py-12">
         <div className="text-center">
           <h1 className="mb-4 text-3xl font-bold text-[#4A3F00]">Product Not Found</h1>
           <p className="mb-8 text-[#8C7B00]">The product you're looking for doesn't exist.</p>
-          <button
-            onClick={() => navigate("/")}
-            className="rounded-lg bg-[#FFDE59] px-6 py-3 font-semibold text-[#4A3F00] transition-opacity hover:opacity-90"
-          >
+          <Button onClick={() => navigate("/")}>
             Back to Home
-          </button>
+          </Button>
         </div>
       </div>
     )
@@ -90,6 +161,8 @@ export function ProductDetail() {
         return "Crafts"
       case "tote-bag":
         return "Tote Bags"
+      case "apparel":
+        return "Apparel"
       default:
         return "Products"
     }
@@ -103,6 +176,8 @@ export function ProductDetail() {
         return "/crafts"
       case "tote-bag":
         return "/tote-bags"
+      case "apparel":
+        return "/apparel"
       default:
         return "/"
     }
@@ -122,7 +197,7 @@ export function ProductDetail() {
         {/* Product Images */}
         <div className="space-y-4">
           {/* Main Image */}
-          <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-100">
+          <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-100 shadow-sm border border-[#FFF5CC]">
             <img
               src={productImages[selectedImageIndex] || "/placeholder.svg"}
               alt={product.title}
@@ -133,12 +208,14 @@ export function ProductDetail() {
             {productImages.length > 1 && (
               <>
                 <button
+                  type="button"
                   onClick={handlePreviousImage}
                   className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 text-[#4A3F00] transition-all hover:bg-white hover:shadow-md"
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </button>
                 <button
+                  type="button"
                   onClick={handleNextImage}
                   className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 text-[#4A3F00] transition-all hover:bg-white hover:shadow-md"
                 >
@@ -149,8 +226,9 @@ export function ProductDetail() {
 
             {/* Favorite Button */}
             <button
+              type="button"
               onClick={toggleFavorite}
-              className={`absolute right-4 top-4 rounded-full bg-white/80 p-2 transition-all hover:bg-white ${
+              className={`absolute right-4 top-4 rounded-full bg-white/80 p-2 transition-all hover:bg-white shadow-sm ${
                 isFavorite ? 'text-red-500' : 'text-[#8C7B00] hover:text-red-500'
               }`}
             >
@@ -163,6 +241,7 @@ export function ProductDetail() {
             <div className="flex gap-2 overflow-x-auto">
               {productImages.map((image, index) => (
                 <button
+                  type="button"
                   key={index}
                   onClick={() => setSelectedImageIndex(index)}
                   className={`flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all ${
@@ -237,6 +316,7 @@ export function ProductDetail() {
               <label className="block text-sm font-medium text-[#4A3F00] mb-2">Quantity</label>
               <div className="flex items-center gap-3">
                 <button
+                  type="button"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   className="rounded-lg border border-[#FFF5CC] px-3 py-2 text-[#4A3F00] transition-colors hover:bg-[#FFFBEB]"
                 >
@@ -244,6 +324,7 @@ export function ProductDetail() {
                 </button>
                 <span className="w-12 text-center font-medium text-[#4A3F00]">{quantity}</span>
                 <button
+                  type="button"
                   onClick={() => setQuantity(quantity + 1)}
                   className="rounded-lg border border-[#FFF5CC] px-3 py-2 text-[#4A3F00] transition-colors hover:bg-[#FFFBEB]"
                 >
@@ -253,15 +334,16 @@ export function ProductDetail() {
             </div>
 
             <div className="flex gap-4">
-              <button
+              <Button
                 onClick={handleAddToCart}
                 disabled={!product.inStock}
-                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#FFDE59] px-6 py-3 font-semibold text-[#4A3F00] transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 h-12 gap-2 text-md font-semibold"
               >
                 <ShoppingCart className="h-5 w-5" />
                 Add to Cart
-              </button>
+              </Button>
               <button 
+                type="button"
                 onClick={toggleFavorite}
                 className={`rounded-lg border border-[#FFF5CC] p-3 transition-colors hover:bg-[#FFFBEB] ${
                   isFavorite ? 'text-red-500 border-red-200 bg-red-50' : 'text-[#8C7B00]'
@@ -269,7 +351,10 @@ export function ProductDetail() {
               >
                 <Heart className={`h-5 w-5 ${isFavorite ? 'fill-current' : ''}`} />
               </button>
-              <button className="rounded-lg border border-[#FFF5CC] p-3 text-[#8C7B00] transition-colors hover:bg-[#FFFBEB]">
+              <button 
+                type="button"
+                className="rounded-lg border border-[#FFF5CC] p-3 text-[#8C7B00] transition-colors hover:bg-[#FFFBEB]"
+              >
                 <Share2 className="h-5 w-5" />
               </button>
             </div>
@@ -332,6 +417,18 @@ export function ProductDetail() {
                   <div className="flex justify-between">
                     <span className="text-[#8C7B00]">Dimensions:</span>
                     <span className="font-medium text-[#4A3F00]">15" × 16" × 6"</span>
+                  </div>
+                </>
+              )}
+              {product.category === "apparel" && (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-[#8C7B00]">Material:</span>
+                    <span className="font-medium text-[#4A3F00]">Premium Handloom Silk / Cotton</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#8C7B00]">Care Instructions:</span>
+                    <span className="font-medium text-[#4A3F00]">Dry Clean Recommended</span>
                   </div>
                 </>
               )}

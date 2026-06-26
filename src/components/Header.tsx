@@ -26,6 +26,7 @@ const navLinks = [
   { href: "/paintings", label: "Paintings" },
   { href: "/crafts", label: "Crafts" },
   { href: "/tote-bags", label: "Tote Bags" },
+  { href: "/apparel", label: "Apparel" },
   { href: "/custom-order", label: "Custom Order" },
 ]
 

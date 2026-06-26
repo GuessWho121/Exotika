@@ -1,12 +1,17 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Upload, X, ImageIcon } from 'lucide-react'
+import { Upload, X, ImageIcon, ZoomIn } from 'lucide-react'
 import { useAdmin } from "../contexts/AdminContext"
 import { useNotifications } from "../contexts/NotificationContext"
+import { Button } from "../components/ui/button"
+import { Input } from "../components/ui/input"
+import { Textarea } from "../components/ui/textarea"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select"
+import { Dialog, DialogContent, DialogTitle, DialogHeader } from "../components/ui/dialog"
 
 export function CustomOrder() {
   const { dispatch } = useAdmin()
@@ -27,13 +32,12 @@ export function CustomOrder() {
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<{[key: string]: boolean}>({})
-
+  const [selectedPreview, setSelectedPreview] = useState<string | null>(null)
 
   const validateForm = () => {
     const errors: {[key: string]: boolean} = {}
     let isValid = true
 
-    // Description validation
     if (!formData.description.trim()) {
       errors.description = true
       addNotification({
@@ -63,7 +67,6 @@ export function CustomOrder() {
       isValid = false
     }
 
-    // Budget validation
     if (!formData.budget) {
       errors.budget = true
       addNotification({
@@ -93,7 +96,6 @@ export function CustomOrder() {
       isValid = false
     }
 
-    // Name validation
     if (!formData.name.trim()) {
       errors.name = true
       addNotification({
@@ -114,7 +116,6 @@ export function CustomOrder() {
       isValid = false
     }
 
-    // Email validation
     if (!formData.email) {
       errors.email = true
       addNotification({
@@ -135,7 +136,6 @@ export function CustomOrder() {
       isValid = false
     }
 
-    // Phone validation (exactly 10 digits)
     if (!formData.phone) {
       errors.phone = true
       addNotification({
@@ -156,7 +156,6 @@ export function CustomOrder() {
       isValid = false
     }
 
-    // Size validation (optional but if provided, should be valid)
     if (formData.size && formData.size.trim().length < 3) {
       errors.size = true
       addNotification({
@@ -172,25 +171,28 @@ export function CustomOrder() {
     return isValid
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target
-    const checked = (e.target as HTMLInputElement).checked
-
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
     setFormData({
       ...formData,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: value,
     })
-    // Clear field error when user starts typing
     if (fieldErrors[name]) {
       setFieldErrors(prev => ({ ...prev, [name]: false }))
     }
+  }
+
+  const handleSelectChange = (value: "painting" | "craft") => {
+    setFormData({
+      ...formData,
+      type: value,
+    })
   }
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     if (files.length === 0) return
 
-    // Validate file types and sizes
     const validFiles = files.filter(file => {
       if (!file.type.startsWith('image/')) {
         addNotification({
@@ -201,7 +203,7 @@ export function CustomOrder() {
         })
         return false
       }
-      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      if (file.size > 10 * 1024 * 1024) {
         addNotification({
           type: "error",
           title: "File Too Large",
@@ -213,7 +215,6 @@ export function CustomOrder() {
       return true
     })
 
-    // Limit to 5 images total
     const remainingSlots = 5 - referenceImages.length
     if (validFiles.length > remainingSlots) {
       addNotification({
@@ -227,7 +228,6 @@ export function CustomOrder() {
     const filesToAdd = validFiles.slice(0, remainingSlots)
     setReferenceImages(prev => [...prev, ...filesToAdd])
 
-    // Create previews
     filesToAdd.forEach(file => {
       const reader = new FileReader()
       reader.onload = (e) => {
@@ -267,8 +267,6 @@ export function CustomOrder() {
     }
 
     setIsSubmitting(true)
-
-    // Simulate form submission
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
     dispatch({
@@ -284,7 +282,7 @@ export function CustomOrder() {
           phone: formData.phone,
         },
         status: "pending",
-        referenceImages: imagePreviews, // Store the base64 images
+        referenceImages: imagePreviews,
       },
     })
 
@@ -310,31 +308,33 @@ export function CustomOrder() {
 
       <form onSubmit={handleSubmit} noValidate className="space-y-6">
         {/* Project Details */}
-        <div className="rounded-lg border border-[#FFF5CC] bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-xl font-semibold text-[#4A3F00]">Project Details</h2>
-          <div className="space-y-4">
+        <Card className="border-[#FFF5CC]">
+          <CardHeader>
+            <CardTitle className="text-xl font-semibold text-[#4A3F00]">Project Details</CardTitle>
+            <CardDescription className="text-[#8C7B00]">Describe the customized craft or painting you wish to request.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[#4A3F00]">Type of Work</label>
-              <select
-                name="type"
-                value={formData.type}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
-              >
-                <option value="painting">Custom Painting</option>
-                <option value="craft">Custom Craft</option>
-              </select>
+              <label className="block mb-1.5 text-sm font-medium text-[#4A3F00]">Type of Work</label>
+              <Select value={formData.type} onValueChange={handleSelectChange}>
+                <SelectTrigger className="border-[#FFF5CC] bg-[#FFFBEB] text-[#4A3F00] focus:ring-[#FFDE59]">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#FFFBEB]">
+                  <SelectItem value="painting" className="text-[#4A3F00] focus:bg-[#FFDE59]">Custom Painting</SelectItem>
+                  <SelectItem value="craft" className="text-[#4A3F00] focus:bg-[#FFDE59]">Custom Craft</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#4A3F00]">Description</label>
-              <textarea
+              <label className="block mb-1.5 text-sm font-medium text-[#4A3F00]">Description</label>
+              <Textarea
                 name="description"
-                rows={4}
                 placeholder="Please describe your vision in detail. Include colors, style, subject matter, and any specific requirements..."
                 value={formData.description}
                 onChange={handleInputChange}
-                className={`mt-1 block w-full rounded-lg border ${fieldErrors.description ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                className={fieldErrors.description ? 'border-red-500 bg-red-50 focus:ring-red-500' : 'border-[#FFF5CC] bg-[#FFFBEB] text-[#4A3F00] focus:ring-[#FFDE59]'}
               />
               <p className="mt-1 text-xs text-[#8C7B00]">
                 {formData.description.length}/1000 characters
@@ -343,21 +343,21 @@ export function CustomOrder() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-[#4A3F00]">
+                <label className="block mb-1.5 text-sm font-medium text-[#4A3F00]">
                   Size {formData.type === "painting" ? "(e.g., 16x20 inches)" : "(e.g., Small, Medium, Large)"}
                 </label>
-                <input
+                <Input
                   type="text"
                   name="size"
                   placeholder={formData.type === "painting" ? "16x20 inches" : "Medium"}
                   value={formData.size}
                   onChange={handleInputChange}
-                  className={`mt-1 block w-full rounded-lg border ${fieldErrors.size ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                  className={fieldErrors.size ? 'border-red-500 bg-red-50 focus:ring-red-500' : 'border-[#FFF5CC] bg-[#FFFBEB] text-[#4A3F00] focus:ring-[#FFDE59]'}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#4A3F00]">Budget (₹)</label>
-                <input
+                <label className="block mb-1.5 text-sm font-medium text-[#4A3F00]">Budget (₹)</label>
+                <Input
                   type="number"
                   name="budget"
                   min="4000"
@@ -365,26 +365,25 @@ export function CustomOrder() {
                   placeholder="16000"
                   value={formData.budget}
                   onChange={handleInputChange}
-                  className={`mt-1 block w-full rounded-lg border ${fieldErrors.budget ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                  className={fieldErrors.budget ? 'border-red-500 bg-red-50 focus:ring-red-500' : 'border-[#FFF5CC] bg-[#FFFBEB] text-[#4A3F00] focus:ring-[#FFDE59]'}
                 />
                 <p className="mt-1 text-xs text-[#8C7B00]">
                   Minimum: ₹4,000 | Maximum: ₹5,00,000
                 </p>
               </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Reference Images */}
-        <div className="rounded-lg border border-[#FFF5CC] bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-xl font-semibold text-[#4A3F00]">Reference Images</h2>
-          <p className="mb-4 text-sm text-[#8C7B00]">
-            Upload any images that can help us understand your vision better. This could include inspiration photos, 
-            color palettes, existing artworks, or sketches. (Maximum 5 images, 10MB each)
-          </p>
-          
-          <div className="space-y-4">
-            {/* Upload Area */}
+        <Card className="border-[#FFF5CC]">
+          <CardHeader>
+            <CardTitle className="text-xl font-semibold text-[#4A3F00]">Reference Images</CardTitle>
+            <CardDescription className="text-[#8C7B00]">
+              Upload any images that can help us understand your vision better (inspiration photos, color schemes, sketches).
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div className="relative">
               <input
                 type="file"
@@ -422,12 +421,15 @@ export function CustomOrder() {
                       src={preview || "/placeholder.svg"}
                       alt={`Reference ${index + 1}`}
                       className="h-24 w-full rounded-lg object-cover cursor-pointer transition-transform hover:scale-105"
-                      onClick={() => window.open(preview, '_blank')}
+                      onClick={() => setSelectedPreview(preview)}
                     />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg pointer-events-none">
+                      <ZoomIn className="h-6 w-6 text-white" />
+                    </div>
                     <button
                       type="button"
                       onClick={() => removeImage(index)}
-                      className="absolute -right-2 -top-2 rounded-full bg-red-500 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                      className="absolute -right-2 -top-2 rounded-full bg-red-500 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100 shadow"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -444,51 +446,54 @@ export function CustomOrder() {
                 </div>
               </div>
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Contact Information */}
-        <div className="rounded-lg border border-[#FFF5CC] bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-xl font-semibold text-[#4A3F00]">Contact Information</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
+        <Card className="border-[#FFF5CC]">
+          <CardHeader>
+            <CardTitle className="text-xl font-semibold text-[#4A3F00]">Contact Information</CardTitle>
+            <CardDescription className="text-[#8C7B00]">We will use these details to contact you with quotes and designs.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-[#4A3F00]">Full Name</label>
-              <input
+              <label className="block mb-1.5 text-sm font-medium text-[#4A3F00]">Full Name</label>
+              <Input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className={`mt-1 block w-full rounded-lg border ${fieldErrors.name ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                className={fieldErrors.name ? 'border-red-500 bg-red-50 focus:ring-red-500' : 'border-[#FFF5CC] bg-[#FFFBEB] text-[#4A3F00] focus:ring-[#FFDE59]'}
                 placeholder="Enter your full name"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#4A3F00]">Email</label>
-              <input
+              <label className="block mb-1.5 text-sm font-medium text-[#4A3F00]">Email</label>
+              <Input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className={`mt-1 block w-full rounded-lg border ${fieldErrors.email ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                className={fieldErrors.email ? 'border-red-500 bg-red-50 focus:ring-red-500' : 'border-[#FFF5CC] bg-[#FFFBEB] text-[#4A3F00] focus:ring-[#FFDE59]'}
                 placeholder="Enter your email"
               />
             </div>
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-[#4A3F00]">Phone Number</label>
-              <input
+              <label className="block mb-1.5 text-sm font-medium text-[#4A3F00]">Phone Number</label>
+              <Input
                 type="tel"
                 name="phone"
                 value={formData.phone}
                 onChange={handleInputChange}
-                className={`mt-1 block w-full rounded-lg border ${fieldErrors.phone ? 'border-red-500 bg-red-50' : 'border-[#FFF5CC]'} bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]`}
+                className={fieldErrors.phone ? 'border-red-500 bg-red-50 focus:ring-red-500' : 'border-[#FFF5CC] bg-[#FFFBEB] text-[#4A3F00] focus:ring-[#FFDE59]'}
                 placeholder="Enter your 10-digit mobile number"
               />
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Process Information */}
-        <div className="rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] p-6">
+        <div className="rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] p-6 shadow-inner">
           <h3 className="mb-2 font-semibold text-[#4A3F00]">How it works:</h3>
           <ol className="list-decimal list-inside space-y-1 text-sm text-[#8C7B00]">
             <li>Submit your custom order request with reference images</li>
@@ -500,14 +505,38 @@ export function CustomOrder() {
           </ol>
         </div>
 
-        <button
+        <Button
           type="submit"
           disabled={isSubmitting}
-          className="w-full rounded-lg bg-[#FFDE59] px-4 py-3 font-semibold text-[#4A3F00] transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="w-full h-12 text-md font-semibold"
         >
-          {isSubmitting ? "Submitting..." : "Submit Custom Order Request"}
-        </button>
+          {isSubmitting ? "Submitting Request..." : "Submit Custom Order Request"}
+        </Button>
       </form>
+
+      {/* Expanded Reference Image Preview Modal */}
+      <Dialog open={!!selectedPreview} onOpenChange={(open) => !open && setSelectedPreview(null)}>
+        <DialogContent className="max-w-3xl border-none p-0 overflow-hidden bg-transparent shadow-2xl">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Reference Image View</DialogTitle>
+          </DialogHeader>
+          <div className="relative flex items-center justify-center p-4 bg-black/90 rounded-lg">
+            <img
+              src={selectedPreview || ""}
+              alt="Reference View"
+              className="max-h-[80vh] max-w-full rounded-md object-contain"
+            />
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute right-4 top-4 rounded-full bg-white/20 text-white border-white/20 hover:bg-white/40 hover:text-white"
+              onClick={() => setSelectedPreview(null)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

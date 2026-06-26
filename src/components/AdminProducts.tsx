@@ -21,7 +21,7 @@ export function AdminProducts() {
     price: "",
     image: "",
     description: "",
-    category: "painting" as "painting" | "craft" | "tote-bag",
+    category: "painting" as "painting" | "craft" | "tote-bag" | "apparel",
     inStock: true,
     height: "",
     width: "",
@@ -357,6 +357,7 @@ export function AdminProducts() {
                   <option value="painting">Painting</option>
                   <option value="craft">Craft</option>
                   <option value="tote-bag">Tote Bag</option>
+                  <option value="apparel">Apparel</option>
                 </select>
               </div>
               <div>
