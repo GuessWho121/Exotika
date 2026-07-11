@@ -1,4 +1,5 @@
 import { Filter, ArrowUpDown } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 
 interface FilterSortBarProps {
   productCount: number
@@ -23,12 +24,17 @@ export function FilterSortBar({ productCount, totalProducts }: FilterSortBarProp
       </div>
 
       <div className="relative w-full sm:w-auto">
-        <select className="block w-full appearance-none rounded-lg border border-transparent bg-[#FFFBEB] px-4 py-2.5 pr-8 text-sm font-medium text-[#4A3F00] outline-none transition-all focus:border-[#FFDE59] focus:ring-2 focus:ring-[#FFDE59]">
-          <option>Sort by: Featured</option>
-          <option>Sort by: Price: Low to High</option>
-          <option>Sort by: Price: High to Low</option>
-          <option>Sort by: Newest</option>
-        </select>
+        <Select defaultValue="featured">
+          <SelectTrigger className="w-full sm:w-48 border border-[#8B4513]/30 bg-[#FFFBEB] text-[#4A3F00] font-medium focus:border-[#8B4513] focus:ring-0">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent className="bg-[#FFFBEB]">
+            <SelectItem value="featured" className="text-[#4A3F00] focus:bg-[#FFDE59]">Sort by: Featured</SelectItem>
+            <SelectItem value="price_asc" className="text-[#4A3F00] focus:bg-[#FFDE59]">Sort by: Price: Low to High</SelectItem>
+            <SelectItem value="price_desc" className="text-[#4A3F00] focus:bg-[#FFDE59]">Sort by: Price: High to Low</SelectItem>
+            <SelectItem value="newest" className="text-[#4A3F00] focus:bg-[#FFDE59]">Sort by: Newest</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     </div>
   )

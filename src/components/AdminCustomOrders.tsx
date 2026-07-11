@@ -1,15 +1,79 @@
 "use client"
 
 import { useState } from "react"
-import { Eye, Palette, ImageIcon } from 'lucide-react'
+import { Eye, Palette, ImageIcon, Download, X, Mail, Phone, MessageCircle } from 'lucide-react'
 import { useAdmin, type CustomOrder } from "../contexts/AdminContext"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 
 export function AdminCustomOrders() {
-  const { state, dispatch } = useAdmin()
+  const { state, refreshCustomOrders } = useAdmin()
   const [selectedOrder, setSelectedOrder] = useState<CustomOrder | null>(null)
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null)
+  const [isZipping, setIsZipping] = useState(false)
 
-  const updateStatus = (id: string, status: CustomOrder["status"]) => {
-    dispatch({ type: "UPDATE_CUSTOM_ORDER_STATUS", payload: { id, status } })
+  const loadJSZip = (): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      if ((window as any).JSZip) {
+        resolve((window as any).JSZip)
+        return
+      }
+      const script = document.createElement("script")
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"
+      script.async = true
+      script.onload = () => resolve((window as any).JSZip)
+      script.onerror = (err) => reject(err)
+      document.body.appendChild(script)
+    })
+  }
+
+  const downloadZip = async (order: CustomOrder) => {
+    if (!order.referenceImages || order.referenceImages.length === 0) return
+    setIsZipping(true)
+    try {
+      const JSZip = await loadJSZip()
+      const zip = new JSZip()
+
+      const promises = order.referenceImages.map(async (url, idx) => {
+        const res = await fetch(url)
+        if (!res.ok) throw new Error(`Failed to fetch image ${url}`)
+        const blob = await res.blob()
+        const ext = url.split(".").pop()?.split("?")[0] || "jpg"
+        zip.file(`reference-${idx + 1}.${ext}`, blob)
+      })
+
+      await Promise.all(promises)
+      const content = await zip.generateAsync({ type: "blob" })
+      
+      const link = document.createElement("a")
+      link.href = URL.createObjectURL(content)
+      link.download = `custom-order-${order.id}-references.zip`
+      link.click()
+      URL.revokeObjectURL(link.href)
+    } catch (err) {
+      console.error("ZIP Generation failed:", err)
+      alert("Failed to download ZIP file. Please try again.")
+    } finally {
+      setIsZipping(false)
+    }
+  }
+
+  const updateStatus = async (id: string, status: CustomOrder["status"]) => {
+    // Format status for prisma enum compatibility ("in-progress" -> "IN_PROGRESS")
+    const formattedStatus = status.toUpperCase().replace("-", "_")
+    try {
+      const res = await fetch(`/api/custom-orders/${id}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: formattedStatus })
+      })
+      if (res.ok) {
+        await refreshCustomOrders()
+      } else {
+        alert("Failed to update custom order status.")
+      }
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   const getStatusColor = (status: CustomOrder["status"]) => {
@@ -59,8 +123,35 @@ export function AdminCustomOrders() {
                     )}
                   </div>
                   <div className="grid gap-2 text-sm text-[#8C7B00] sm:grid-cols-2">
-                    <div>
-                      <strong>Customer:</strong> {order.customerInfo.name}
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <strong>Customer:</strong> <span>{order.customerInfo.name}</span>
+                      <span className="flex items-center gap-1.5 ml-1">
+                        <a 
+                          href={`mailto:${order.customerInfo.email}?subject=Regarding your Exotika Creation Custom Order`}
+                          className="text-[#8C7B00] hover:text-[#4A3F00] transition-colors"
+                          title={`Email ${order.customerInfo.name}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Mail className="h-4 w-4" />
+                        </a>
+                        <a 
+                          href={`tel:${order.customerInfo.phone}`}
+                          className="text-[#8C7B00] hover:text-[#4A3F00] transition-colors"
+                          title={`Call ${order.customerInfo.name}`}
+                        >
+                          <Phone className="h-4 w-4" />
+                        </a>
+                        <a 
+                          href={`https://wa.me/${order.customerInfo.phone.replace(/\D/g, "").length === 10 ? "91" : ""}${order.customerInfo.phone.replace(/\D/g, "")}`}
+                          className="text-green-600 hover:text-green-700 transition-colors"
+                          title={`WhatsApp ${order.customerInfo.name}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <MessageCircle className="h-4 w-4 fill-green-600/10" />
+                        </a>
+                      </span>
                     </div>
                     <div>
                       <strong>Type:</strong> <span className="capitalize">{order.type}</span>
@@ -88,16 +179,20 @@ export function AdminCustomOrders() {
                     <div className="text-sm text-[#8C7B00] capitalize">{order.type}</div>
                   </div>
                   <div className="space-y-2">
-                    <select
+                    <Select
                       value={order.status}
-                      onChange={(e) => updateStatus(order.id, e.target.value as CustomOrder["status"])}
-                      className="block w-full rounded border border-[#FFF5CC] bg-[#FFFBEB] px-2 py-1 text-xs text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-1 focus:ring-[#FFDE59]"
+                      onValueChange={(val) => updateStatus(order.id, val as any)}
                     >
-                      <option value="pending">Pending</option>
-                      <option value="in-progress">In Progress</option>
-                      <option value="completed">Completed</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
+                      <SelectTrigger className="w-full h-8 border border-[#8B4513]/30 bg-[#FFFBEB] text-[#4A3F00] text-xs focus:border-[#8B4513] focus:ring-0">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#FFFBEB]">
+                        <SelectItem value="pending" className="text-[#4A3F00] focus:bg-[#FFDE59] text-xs">Pending</SelectItem>
+                        <SelectItem value="in-progress" className="text-[#4A3F00] focus:bg-[#FFDE59] text-xs">In Progress</SelectItem>
+                        <SelectItem value="completed" className="text-[#4A3F00] focus:bg-[#FFDE59] text-xs">Completed</SelectItem>
+                        <SelectItem value="cancelled" className="text-[#4A3F00] focus:bg-[#FFDE59] text-xs">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <button
                       onClick={() => setSelectedOrder(order)}
                       className="flex w-full items-center justify-center gap-1 rounded bg-[#FFFBEB] px-3 py-1 text-xs text-[#4A3F00] hover:bg-[#FFF5CC]"
@@ -126,14 +221,44 @@ export function AdminCustomOrders() {
                   <div>
                     <h4 className="font-semibold text-[#4A3F00]">Customer Information</h4>
                     <div className="mt-2 space-y-1 text-sm text-[#8C7B00]">
-                      <div>
-                        <strong>Name:</strong> {selectedOrder.customerInfo.name}
+                       <div className="flex items-center justify-between py-1 border-b border-gray-100">
+                        <div>
+                          <strong>Name:</strong> {selectedOrder.customerInfo.name}
+                        </div>
                       </div>
-                      <div>
-                        <strong>Email:</strong> {selectedOrder.customerInfo.email}
+                      <div className="flex items-center justify-between py-1 border-b border-gray-100">
+                        <div>
+                          <strong>Email:</strong> {selectedOrder.customerInfo.email}
+                        </div>
+                        <a 
+                          href={`mailto:${selectedOrder.customerInfo.email}?subject=Regarding your Exotika Creation Custom Order`}
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-[#8C7B00] hover:text-[#4A3F00] transition-colors bg-[#FFFBEB] px-2 py-1 rounded border border-[#E6C747]/30 shadow-xs"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Mail className="h-3.5 w-3.5" /> Email
+                        </a>
                       </div>
-                      <div>
-                        <strong>Phone:</strong> {selectedOrder.customerInfo.phone}
+                      <div className="flex items-center justify-between py-1">
+                        <div>
+                          <strong>Phone:</strong> {selectedOrder.customerInfo.phone}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <a 
+                            href={`tel:${selectedOrder.customerInfo.phone}`}
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-[#8C7B00] hover:text-[#4A3F00] transition-colors bg-[#FFFBEB] px-2 py-1 rounded border border-[#E6C747]/30 shadow-xs"
+                          >
+                            <Phone className="h-3.5 w-3.5" /> Call
+                          </a>
+                          <a 
+                            href={`https://wa.me/${selectedOrder.customerInfo.phone.replace(/\D/g, "").length === 10 ? "91" : ""}${selectedOrder.customerInfo.phone.replace(/\D/g, "")}`}
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-green-700 hover:text-green-800 transition-colors bg-green-50 px-2 py-1 rounded border border-green-200 shadow-xs"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <MessageCircle className="h-3.5 w-3.5 fill-green-600/10" /> WhatsApp
+                          </a>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -176,15 +301,25 @@ export function AdminCustomOrders() {
                 {/* Reference Images */}
                 {selectedOrder.referenceImages && selectedOrder.referenceImages.length > 0 && (
                   <div>
-                    <h4 className="font-semibold text-[#4A3F00]">Reference Images ({selectedOrder.referenceImages.length})</h4>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-[#4A3F00]">Reference Images ({selectedOrder.referenceImages.length})</h4>
+                      <button
+                        type="button"
+                        onClick={() => downloadZip(selectedOrder)}
+                        disabled={isZipping}
+                        className="flex items-center gap-1 rounded bg-[#FFDE59] px-3 py-1.5 text-xs font-semibold text-[#4A3F00] hover:opacity-90 transition-opacity shadow-sm disabled:opacity-50"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        {isZipping ? "Creating ZIP..." : "Download ZIP"}
+                      </button>
+                    </div>
                     <div className="mt-2 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
                       {selectedOrder.referenceImages.map((image, index) => (
-                        <div key={index} className="group relative">
+                        <div key={index} className="group relative cursor-pointer" onClick={() => setZoomedImage(image)}>
                           <img
                             src={image || "/placeholder.svg"}
                             alt={`Reference ${index + 1}`}
-                            className="h-24 w-full rounded-lg object-cover cursor-pointer transition-transform hover:scale-105"
-                            onClick={() => window.open(image, '_blank')}
+                            className="h-24 w-full rounded-lg object-cover transition-transform hover:scale-105"
                           />
                           <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black bg-opacity-0 transition-all group-hover:bg-opacity-20">
                             <Eye className="h-5 w-5 text-white opacity-0 transition-opacity group-hover:opacity-100" />
@@ -192,7 +327,7 @@ export function AdminCustomOrders() {
                         </div>
                       ))}
                     </div>
-                    <p className="mt-2 text-xs text-[#8C7B00]">Click on any image to view full size</p>
+                    <p className="mt-2 text-xs text-[#8C7B00]">Click on any image to zoom in</p>
                   </div>
                 )}
               </div>
@@ -206,6 +341,24 @@ export function AdminCustomOrders() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Reference Image Zoom Overlay Modal */}
+      {zoomedImage && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4" onClick={() => setZoomedImage(null)}>
+          <div className="relative max-w-4xl w-full max-h-[90vh] flex items-center justify-center animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={zoomedImage}
+              alt="Zoomed Reference"
+              className="max-w-full max-h-[85vh] rounded-lg object-contain shadow-2xl"
+            />
+            <button
+              onClick={() => setZoomedImage(null)}
+              className="absolute right-4 top-4 rounded-full bg-white/20 p-2 text-white border-white/20 hover:bg-white/40 hover:text-white transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
         </div>
       )}

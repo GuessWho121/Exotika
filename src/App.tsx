@@ -21,19 +21,27 @@ import { ProductDetail } from "./pages/ProductDetail"
 import { Admin } from "./pages/Admin"
 import { Login } from "./pages/Login"
 import { Signup } from "./pages/Signup"
+import { SearchPage } from "./pages/SearchPage"
+
+import { GoogleOAuthProvider } from "@react-oauth/google"
+import { ScrollToTop } from "./components/ScrollToTop"
 
 function App() {
+  const googleClientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID || ""
+
   return (
-    <NotificationProvider>
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <NotificationProvider>
       <AdminProvider>
         <FavoritesProvider>
           <CartProvider>
             <div className="relative flex min-h-screen flex-col bg-[#FFFBEB]">
               <Router>
+                <ScrollToTop />
                 <Header />
                 <NotificationContainer />
                 <main className="flex flex-1 flex-col items-center">
-                  <div className="w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+                  <div className="w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 mt-6 md:mt-24">
                     <Routes>
                       <Route path="/" element={<Home />} />
                       <Route path="/paintings" element={<Paintings />} />
@@ -50,6 +58,7 @@ function App() {
                       <Route path="/admin" element={<Admin />} />
                       <Route path="/login" element={<Login />} />
                       <Route path="/signup" element={<Signup />} />
+                      <Route path="/search" element={<SearchPage />} />
                     </Routes>
                   </div>
                 </main>
@@ -60,6 +69,7 @@ function App() {
         </FavoritesProvider>
       </AdminProvider>
     </NotificationProvider>
+    </GoogleOAuthProvider>
   )
 }
 

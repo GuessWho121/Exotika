@@ -1,5 +1,66 @@
-# Remove the version line as Docker Compose warned
+version: '3.8'
+
 services:
+  exotika-db:
+    image: postgres:16-alpine
+    container_name: exotika-db-dev
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: exotika_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    networks:
+      - exotika-dev-network
+
+  exotika-minio:
+    image: minio/minio:latest
+    container_name: exotika-minio-dev
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_dev_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - exotika-dev-network
+
+  exotika-backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.dev
+    container_name: exotika-backend-dev
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./server:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=8080
+      - DATABASE_URL=postgresql://postgres:postgres@exotika-db:5432/exotika_db?schema=public
+      - JWT_SECRET=supersecretjwtkeyreplaceinproduction
+      - CORS_ORIGIN=http://localhost:5173
+      - S3_ENDPOINT=http://exotika-minio:9000
+      - S3_PUBLIC_URL=http://localhost:9000
+      - AWS_ACCESS_KEY_ID=minioadmin
+      - AWS_SECRET_ACCESS_KEY=minioadmin
+      - AWS_S3_BUCKET_NAME=exotika-bucket
+      - S3_FORCE_PATH_STYLE=true
+    depends_on:
+      - exotika-db
+      - exotika-minio
+    networks:
+      - exotika-dev-network
+
   exotika-dev:
     build:
       context: .
@@ -12,9 +73,15 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
+    depends_on:
+      - exotika-backend
     networks:
       - exotika-dev-network
 
 networks:
   exotika-dev-network:
     driver: bridge
+
+volumes:
+  postgres_dev_data:
+  minio_dev_data:

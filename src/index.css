@@ -90,3 +90,15 @@
 .slide-in-from-right {
   animation: slide-in-from-right 0.3s ease-out;
 }
+
+/* Prevent Radix Select/Dialog from hiding the body scrollbar */
+html body, html body[style], html[style] {
+  overflow: auto !important;
+  padding-right: 0px !important;
+  margin-right: 0px !important;
+}
+
+/* Ensure Google Maps autocomplete dropdown is always on top of modals/steppers */
+.pac-container {
+  z-index: 99999 !important;
+}

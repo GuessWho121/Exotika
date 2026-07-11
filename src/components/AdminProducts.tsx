@@ -6,9 +6,10 @@ import { useState } from "react"
 import { Plus, Edit, Trash2, Package, Upload } from 'lucide-react'
 import { useAdmin, type Product } from "../contexts/AdminContext"
 import { useNotifications } from "../contexts/NotificationContext"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 
 export function AdminProducts() {
-  const { state, dispatch } = useAdmin()
+  const { state, refreshProducts } = useAdmin()
   const { addNotification } = useNotifications()
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
@@ -216,7 +217,7 @@ export function AdminProducts() {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!validateForm()) {
@@ -237,34 +238,60 @@ export function AdminProducts() {
       }),
     }
 
-    if (editingProduct) {
-      dispatch({
-        type: "UPDATE_PRODUCT",
-        payload: {
-          ...editingProduct,
-          ...productData,
-        },
-      })
-      addNotification({
-        type: "success",
-        title: "Product Updated!",
-        message: `${productData.title} has been updated successfully.`,
-        duration: 4000,
-      })
-    } else {
-      dispatch({
-        type: "ADD_PRODUCT",
-        payload: productData,
-      })
-      addNotification({
-        type: "success",
-        title: "Product Added!",
-        message: `${productData.title} has been added to your catalog.`,
-        duration: 4000,
-      })
+    const productPayload = {
+      title: productData.title,
+      price: productData.price,
+      imageUrl: productData.image,
+      description: productData.description,
+      category: productData.category.toUpperCase(),
+      inStock: productData.inStock,
+      height: productData.height || undefined,
+      width: productData.width || undefined,
+      medium: productData.medium || undefined
     }
 
-    resetForm()
+    try {
+      if (editingProduct) {
+        const res = await fetch(`/api/products/${editingProduct.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(productPayload)
+        })
+        if (res.ok) {
+          await refreshProducts()
+          addNotification({
+            type: "success",
+            title: "Product Updated!",
+            message: `${productData.title} has been updated successfully.`,
+            duration: 4000,
+          })
+          resetForm()
+        } else {
+          alert("Failed to update product on backend.")
+        }
+      } else {
+        const res = await fetch("/api/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(productPayload)
+        })
+        if (res.ok) {
+          await refreshProducts()
+          addNotification({
+            type: "success",
+            title: "Product Added!",
+            message: `${productData.title} has been added to your catalog.`,
+            duration: 4000,
+          })
+          resetForm()
+        } else {
+          alert("Failed to add product to backend.")
+        }
+      }
+    } catch (err) {
+      console.error(err)
+      alert("Network error: Failed to connect to server.")
+    }
   }
 
   const handleEdit = (product: Product) => {
@@ -285,15 +312,26 @@ export function AdminProducts() {
     setFieldErrors({})
   }
 
-  const handleDelete = (product: Product) => {
+  const handleDelete = async (product: Product) => {
     if (confirm(`Are you sure you want to delete "${product.title}"?`)) {
-      dispatch({ type: "DELETE_PRODUCT", payload: product.id })
-      addNotification({
-        type: "info",
-        title: "Product Deleted",
-        message: `${product.title} has been removed from your catalog.`,
-        duration: 4000,
-      })
+      try {
+        const res = await fetch(`/api/products/${product.id}`, {
+          method: "DELETE"
+        })
+        if (res.ok) {
+          await refreshProducts()
+          addNotification({
+            type: "info",
+            title: "Product Deleted",
+            message: `${product.title} has been removed from your catalog.`,
+            duration: 4000,
+          })
+        } else {
+          alert("Failed to delete product from server.")
+        }
+      } catch (err) {
+        console.error(err)
+      }
     }
   }
 
@@ -347,18 +385,21 @@ export function AdminProducts() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#4A3F00]">Category</label>
-                <select
-                  name="category"
+                <label className="block text-sm font-medium text-[#4A3F00] mb-1">Category</label>
+                <Select
                   value={formData.category}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                  onValueChange={(val) => setFormData(prev => ({ ...prev, category: val as any }))}
                 >
-                  <option value="painting">Painting</option>
-                  <option value="craft">Craft</option>
-                  <option value="tote-bag">Tote Bag</option>
-                  <option value="apparel">Apparel</option>
-                </select>
+                  <SelectTrigger className="w-full border border-[#8B4513]/30 bg-[#FFFBEB] text-[#4A3F00] focus:border-[#8B4513] focus:ring-0">
+                    <SelectValue placeholder="Select Category" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#FFFBEB]">
+                    <SelectItem value="painting" className="text-[#4A3F00] focus:bg-[#FFDE59]">Painting</SelectItem>
+                    <SelectItem value="craft" className="text-[#4A3F00] focus:bg-[#FFDE59]">Craft</SelectItem>
+                    <SelectItem value="tote-bag" className="text-[#4A3F00] focus:bg-[#FFDE59]">Tote Bag</SelectItem>
+                    <SelectItem value="apparel" className="text-[#4A3F00] focus:bg-[#FFDE59]">Apparel</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-[#4A3F00]">Product Image</label>

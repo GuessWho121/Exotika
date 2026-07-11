@@ -1,246 +1,281 @@
 "use client"
 
 import type React from "react"
-
-import { createContext, useContext, useReducer, type ReactNode } from "react"
+import { createContext, useContext, useReducer, useEffect, type ReactNode, useCallback } from "react"
 
 export interface Product {
-id: string
-title: string
-price: number
-image: string
-description?: string
-category: "painting" | "craft" | "tote-bag" | "apparel"
-inStock: boolean
-createdAt: Date
-// Additional fields for paintings
-height?: string
-width?: string
-medium?: string
-}
-
-export interface Transaction {
-id: string
-items: Array<{
   id: string
   title: string
   price: number
-  quantity: number
-}>
-total: number
-customerInfo: {
-  name: string
-  email: string
-  address: string
-  phone: string
+  image: string
+  description?: string
+  category: "painting" | "craft" | "tote-bag" | "apparel"
+  inStock: boolean
+  createdAt: Date
+  height?: string
+  width?: string
+  medium?: string
 }
-status: "pending" | "processing" | "shipped" | "delivered"
-createdAt: Date
+
+export interface Transaction {
+  id: string
+  items: Array<{
+    id: string
+    title: string
+    price: number
+    quantity: number
+  }>
+  total: number
+  customerInfo: {
+    name: string
+    email: string
+    address: string
+    phone: string
+  }
+  status: "pending" | "processing" | "shipped" | "delivered"
+  createdAt: Date
+  paymentId?: string | null
+  isPaid?: boolean
 }
 
 export interface CustomOrder {
-id: string
-type: "painting" | "craft"
-description: string
-size?: string
-budget: number
-customerInfo: {
+  id: string
+  type: "painting" | "craft"
+  description: string
+  size?: string
+  budget: number
+  customerInfo: {
+    name: string
+    email: string
+    phone: string
+  }
+  status: "pending" | "in-progress" | "completed" | "cancelled"
+  createdAt: Date
+  referenceImages?: string[]
+}
+
+export interface User {
+  id: string
   name: string
   email: string
-  phone: string
-}
-status: "pending" | "in-progress" | "completed" | "cancelled"
-createdAt: Date
-referenceImages?: string[] // Array of base64 image strings
+  role: "CUSTOMER" | "ADMIN"
+  phone?: string
+  address?: string
+  city?: string
+  zipCode?: string
+  phoneVerified?: boolean
 }
 
 interface AdminState {
-products: Product[]
-transactions: Transaction[]
-customOrders: CustomOrder[]
-isAdmin: boolean // Added isAdmin state
+  products: Product[]
+  transactions: Transaction[]
+  customOrders: CustomOrder[]
+  isAdmin: boolean
+  user: User | null
+  loading: boolean
 }
 
 type AdminAction =
-| { type: "ADD_PRODUCT"; payload: Omit<Product, "id" | "createdAt"> }
-| { type: "UPDATE_PRODUCT"; payload: Product }
-| { type: "DELETE_PRODUCT"; payload: string }
-| { type: "ADD_TRANSACTION"; payload: Omit<Transaction, "id" | "createdAt"> }
-| { type: "UPDATE_TRANSACTION_STATUS"; payload: { id: string; status: Transaction["status"] } }
-| { type: "ADD_CUSTOM_ORDER"; payload: Omit<CustomOrder, "id" | "createdAt"> }
-| { type: "UPDATE_CUSTOM_ORDER_STATUS"; payload: { id: string; status: CustomOrder["status"] } }
-| { type: "SET_ADMIN_STATUS"; payload: boolean } // Added action type
+  | { type: "SET_PRODUCTS"; payload: Product[] }
+  | { type: "SET_TRANSACTIONS"; payload: Transaction[] }
+  | { type: "SET_CUSTOM_ORDERS"; payload: CustomOrder[] }
+  | { type: "SET_USER"; payload: User | null }
+  | { type: "SET_ADMIN_STATUS"; payload: boolean }
+  | { type: "SET_LOADING"; payload: boolean }
 
-const AdminContext = createContext<{
-state: AdminState
-dispatch: React.Dispatch<AdminAction>
-} | null>(null)
+interface AdminContextType {
+  state: AdminState
+  dispatch: React.Dispatch<AdminAction>
+  refreshProducts: () => Promise<void>
+  refreshTransactions: () => Promise<void>
+  refreshCustomOrders: () => Promise<void>
+  fetchSession: () => Promise<User | null>
+  logoutUser: () => Promise<void>
+}
 
-// Sample initial data with rupees
-const initialProducts: Product[] = [
-{
-  id: "1",
-  title: "Vibrant Sunset",
-  price: 15000,
-  image:
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuCQXUUOu8-Ftxlj8LN_4MLnolOEWM838mOfrJi7oXk9dMFcN_rus5L5fhypsp3oTu89tKlE1UE3fMY_kpx_aHjbDlrFT7KBoQ1Bfd-T2-iz2qx1StCNV2dNySE7IwBrVmUgHiTve1-kXSk165bS-HxerPVVOK0k5Nx67tLyyqzbVpnDl2r_nHJfJABsdM-QUx4dJpZByiVvOIflPKMqaYYVpRc2c9nWBay5V9gGIRuES59Wu7I3--zKZCGtAXX9o4JS6d5uxu10M2yQ",
-  category: "painting",
-  inStock: true,
-  createdAt: new Date("2024-01-15"),
-  height: "20",
-  width: "16",
-  medium: "Acrylic on Canvas",
-},
-{
-  id: "2",
-  title: "Handmade Ceramic Bowl",
-  price: 3750,
-  image:
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuCWhaAhSnzROQO65Ls7V8WOBWoQvUowtQc6afr-mJpB28BvHKIPoYZtDWHS-L7HTtLK1x3WVxhfO2c88w76keXDO9fFq8nBesMq3-xWxSOlGgx9O_283gPrEVjqd-uSudzaldRJGCtEX9Jj8eBBKzTeCk-_SBAP_dxThVFwoi8jZ3RR91uWuef94TJoQ3yPwNE8HpOltcdijf4eHeOVkUtx1ICgxY9ugrB-DX1dBNGkm2fRDM-qM-apabS0bIodBpwo78wmynQ-9Qjt",
-  category: "craft",
-  inStock: true,
-  createdAt: new Date("2024-01-20"),
-},
-{
-  id: "3",
-  title: "Floral Symphony Tote",
-  price: 2100,
-  image:
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuCPq7r7Zc_62QlWRGfVq2E81FmWGpCWCfdIO3RghgDn_Zdcu9e7Wwu0-Jids6xuc8-_NunsHE814Y90nmV5JR13av-CHX0i6AgJjrA_42DuExbqZLUPloD6S13XOw-xE22VOkX0amWoaaQZ5nrjm7z11dKC9X3uAkKHdcSSO_Nl0cYtTammHcu7wlGNvmsvtwyOLlYGaqZQwAw1gvphLDRRJZuzuAqLwIIU4nMNGtomk42CP7Ej8VRLZahnzLLNM07Cn5T_zv8y8kY-",
-  category: "tote-bag",
-  inStock: true,
-  createdAt: new Date("2024-01-25"),
-},
-{
-  id: "4",
-  title: "Royal Kora Silk Saree",
-  price: 12500,
-  image:
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuCQXUUOu8-Ftxlj8LN_4MLnolOEWM838mOfrJi7oXk9dMFcN_rus5L5fhypsp3oTu89tKlE1UE3fMY_kpx_aHjbDlrFT7KBoQ1Bfd-T2-iz2qx1StCNV2dNySE7IwBrVmUgHiTve1-kXSk165bS-HxerPVVOK0k5Nx67tLyyqzbVpnDl2r_nHJfJABsdM-QUx4dJpZByiVvOIflPKMqaYYVpRc2c9nWBay5V9gGIRuES59Wu7I3--zKZCGtAXX9o4JS6d5uxu10M2yQ",
-  category: "apparel",
-  inStock: true,
-  createdAt: new Date("2024-02-01"),
-  description: "Exquisite hand-woven Kora silk saree featuring traditional gold zari borders and a rich pallu. Perfect for festive celebrations and weddings."
-},
-{
-  id: "5",
-  title: "Hand-Embroidered Anarkali Kurta",
-  price: 4800,
-  image:
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuCWhaAhSnzROQO65Ls7V8WOBWoQvUowtQc6afr-mJpB28BvHKIPoYZtDWHS-L7HTtLK1x3WVxhfO2c88w76keXDO9fFq8nBesMq3-xWxSOlGgx9O_283gPrEVjqd-uSudzaldRJGCtEX9Jj8eBBKzTeCk-_SBAP_dxThVFwoi8jZ3RR91uWuef94TJoQ3yPwNE8HpOltcdijf4eHeOVkUtx1ICgxY9ugrB-DX1dBNGkm2fRDM-qM-apabS0bIodBpwo78wmynQ-9Qjt",
-  category: "apparel",
-  inStock: true,
-  createdAt: new Date("2024-02-05"),
-  description: "Elegant floor-length Anarkali kurta crafted from premium cotton with delicate Chikankari embroidery. Designed for comfort and high-end style."
-},
-{
-  id: "6",
-  title: "Chanderi Handloom Dupatta",
-  price: 2100,
-  image:
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuCPq7r7Zc_62QlWRGfVq2E81FmWGpCWCfdIO3RghgDn_Zdcu9e7Wwu0-Jids6xuc8-_NunsHE814Y90nmV5JR13av-CHX0i6AgJjrA_42DuExbqZLUPloD6S13XOw-xE22VOkX0amWoaaQZ5nrjm7z11dKC9X3uAkKHdcSSO_Nl0cYtTammHcu7wlGNvmsvtwyOLlYGaqZQwAw1gvphLDRRJZuzuAqLwIIU4nMNGtomk42CP7Ej8VRLZahnzLLNM07Cn5T_zv8y8kY-",
-  category: "apparel",
-  inStock: true,
-  createdAt: new Date("2024-02-10"),
-  description: "A lightweight, semi-sheer Chanderi cotton-silk dupatta adorned with intricate hand-painted floral motifs and zari borders."
-},
-]
+const AdminContext = createContext<AdminContextType | null>(null)
 
 function adminReducer(state: AdminState, action: AdminAction): AdminState {
-switch (action.type) {
-  case "ADD_PRODUCT":
-    return {
-      ...state,
-      products: [
-        ...state.products,
-        {
-          ...action.payload,
-          id: Date.now().toString(),
-          createdAt: new Date(),
-        },
-      ],
-    }
-
-  case "UPDATE_PRODUCT":
-    return {
-      ...state,
-      products: state.products.map((product) => (product.id === action.payload.id ? action.payload : product)),
-    }
-
-  case "DELETE_PRODUCT":
-    return {
-      ...state,
-      products: state.products.filter((product) => product.id !== action.payload),
-    }
-
-  case "ADD_TRANSACTION":
-    return {
-      ...state,
-      transactions: [
-        ...state.transactions,
-        {
-          ...action.payload,
-          id: Date.now().toString(),
-          createdAt: new Date(),
-        },
-      ],
-    }
-
-  case "UPDATE_TRANSACTION_STATUS":
-    return {
-      ...state,
-      transactions: state.transactions.map((transaction) =>
-        transaction.id === action.payload.id ? { ...transaction, status: action.payload.status } : transaction,
-      ),
-    }
-
-  case "ADD_CUSTOM_ORDER":
-    return {
-      ...state,
-      customOrders: [
-        ...state.customOrders,
-        {
-          ...action.payload,
-          id: Date.now().toString(),
-          createdAt: new Date(),
-        },
-      ],
-    }
-
-  case "UPDATE_CUSTOM_ORDER_STATUS":
-    return {
-      ...state,
-      customOrders: state.customOrders.map((order) =>
-        order.id === action.payload.id ? { ...order, status: action.payload.status } : order,
-      ),
-    }
-
-  case "SET_ADMIN_STATUS": // New case for setting admin status
-    return {
-      ...state,
-      isAdmin: action.payload,
-    }
-
-  default:
-    return state
-}
+  switch (action.type) {
+    case "SET_PRODUCTS":
+      return { ...state, products: action.payload }
+    case "SET_TRANSACTIONS":
+      return { ...state, transactions: action.payload }
+    case "SET_CUSTOM_ORDERS":
+      return { ...state, customOrders: action.payload }
+    case "SET_USER":
+      return { ...state, user: action.payload, isAdmin: action.payload?.role === "ADMIN" }
+    case "SET_ADMIN_STATUS":
+      return { ...state, isAdmin: action.payload }
+    case "SET_LOADING":
+      return { ...state, loading: action.payload }
+    default:
+      return state
+  }
 }
 
 export function AdminProvider({ children }: { children: ReactNode }) {
-const [state, dispatch] = useReducer(adminReducer, {
-  products: initialProducts,
-  transactions: [],
-  customOrders: [],
-  isAdmin: false, // Initial state for isAdmin
-})
+  const [state, dispatch] = useReducer(adminReducer, {
+    products: [],
+    transactions: [],
+    customOrders: [],
+    isAdmin: false,
+    user: null,
+    loading: true
+  })
 
-return <AdminContext.Provider value={{ state, dispatch }}>{children}</AdminContext.Provider>
+  // 1. Fetch catalog products
+  const refreshProducts = useCallback(async () => {
+    try {
+      const res = await fetch("/api/products")
+      if (res.ok) {
+        const json = await res.json()
+        const formatted: Product[] = json.data.products.map((p: any) => ({
+          id: p.id,
+          title: p.title,
+          price: Number(p.price),
+          image: p.imageUrl,
+          description: p.description || "",
+          category: p.category.toLowerCase() as any,
+          inStock: p.inStock,
+          createdAt: new Date(p.createdAt),
+          height: p.height || undefined,
+          width: p.width || undefined,
+          medium: p.medium || undefined
+        }))
+        dispatch({ type: "SET_PRODUCTS", payload: formatted })
+      }
+    } catch (err) {
+      console.error("Failed to fetch products:", err)
+    }
+  }, [])
+
+  // 2. Fetch standard transactions (Admin only API)
+  const refreshTransactions = useCallback(async () => {
+    try {
+      const res = await fetch("/api/orders")
+      if (res.ok) {
+        const json = await res.json()
+        const formatted: Transaction[] = json.data.orders.map((o: any) => ({
+          id: o.id,
+          total: Number(o.totalAmount),
+          status: o.status.toLowerCase() as any,
+          createdAt: new Date(o.createdAt),
+          paymentId: o.paymentId || null,
+          isPaid: o.isPaid || false,
+          customerInfo: {
+            name: o.customerName,
+            email: o.customerEmail,
+            phone: o.customerPhone,
+            address: `${o.shippingAddress}, ${o.shippingCity} - ${o.shippingZipCode}`
+          },
+          items: (o.items || []).map((i: any) => ({
+            id: i.productId || "",
+            title: i.title,
+            price: Number(i.price),
+            quantity: i.quantity
+          }))
+        }))
+        dispatch({ type: "SET_TRANSACTIONS", payload: formatted })
+      }
+    } catch (err) {
+      console.error("Failed to fetch transactions:", err)
+    }
+  }, [])
+
+  // 3. Fetch custom orders (comissions requests)
+  const refreshCustomOrders = useCallback(async () => {
+    try {
+      const res = await fetch("/api/custom-orders")
+      if (res.ok) {
+        const json = await res.json()
+        const formatted: CustomOrder[] = json.data.customOrders.map((c: any) => ({
+          id: c.id,
+          type: c.type.toLowerCase() as any,
+          description: c.description,
+          size: c.size || "",
+          budget: Number(c.budget),
+          status: c.status.toLowerCase() as any,
+          createdAt: new Date(c.createdAt),
+          customerInfo: {
+            name: c.customerName,
+            email: c.customerEmail,
+            phone: c.customerPhone
+          },
+          referenceImages: (c.references || []).map((r: any) => r.referenceUrl)
+        }))
+        dispatch({ type: "SET_CUSTOM_ORDERS", payload: formatted })
+      }
+    } catch (err) {
+      console.error("Failed to fetch custom orders:", err)
+    }
+  }, [])
+
+  // 4. Check active auth session
+  const fetchSession = useCallback(async (): Promise<User | null> => {
+    dispatch({ type: "SET_LOADING", payload: true })
+    try {
+      const res = await fetch("/api/auth/me")
+      if (res.ok) {
+        const json = await res.json()
+        const user: User = json.data.user
+        dispatch({ type: "SET_USER", payload: user })
+        
+        // Fetch Admin data if appropriate
+        if (user.role === "ADMIN") {
+          refreshTransactions()
+          refreshCustomOrders()
+        }
+        dispatch({ type: "SET_LOADING", payload: false })
+        return user
+      }
+    } catch (err) {
+      console.error("Session verification failed:", err)
+    }
+    dispatch({ type: "SET_USER", payload: null })
+    dispatch({ type: "SET_LOADING", payload: false })
+    return null
+  }, [refreshTransactions, refreshCustomOrders])
+
+  // 5. Logout User Session
+  const logoutUser = useCallback(async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" })
+    } catch (err) {
+      console.error("Logout API request error:", err)
+    }
+    dispatch({ type: "SET_USER", payload: null })
+    dispatch({ type: "SET_TRANSACTIONS", payload: [] })
+    dispatch({ type: "SET_CUSTOM_ORDERS", payload: [] })
+  }, [])
+
+  // Load initial products and auth session on mount
+  useEffect(() => {
+    refreshProducts()
+    fetchSession()
+  }, [refreshProducts, fetchSession])
+
+  return (
+    <AdminContext.Provider
+      value={{
+        state,
+        dispatch,
+        refreshProducts,
+        refreshTransactions,
+        refreshCustomOrders,
+        fetchSession,
+        logoutUser
+      }}
+    >
+      {children}
+    </AdminContext.Provider>
+  )
 }
 
 export function useAdmin() {
-const context = useContext(AdminContext)
-if (!context) {
-  throw new Error("useAdmin must be used within an AdminProvider")
-}
-return context
+  const context = useContext(AdminContext)
+  if (!context) {
+    throw new Error("useAdmin must be used within an AdminProvider")
+  }
+  return context
 }

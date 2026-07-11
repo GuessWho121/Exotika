@@ -1,19 +1,78 @@
 version: '3.8'
 
 services:
+  exotika-db:
+    image: postgres:16-alpine
+    container_name: exotika-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: exotika_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - exotika-network
+
+  exotika-minio:
+    image: minio/minio:latest
+    container_name: exotika-minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"   # MinIO API port
+      - "9001:9001"   # MinIO Console Console UI
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - exotika-network
+
+  exotika-backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: exotika-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - DATABASE_URL=postgresql://postgres:${DB_PASSWORD:-postgres}@exotika-db:5432/exotika_db?schema=public
+      - JWT_SECRET=${JWT_SECRET:-supersecretjwtkeyreplaceinproduction}
+      - CORS_ORIGIN=http://localhost:3000
+      - S3_ENDPOINT=http://exotika-minio:9000
+      - S3_PUBLIC_URL=http://localhost:9000
+      - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER:-minioadmin}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
+      - AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME:-exotika-bucket}
+      - S3_FORCE_PATH_STYLE=true
+    depends_on:
+      - exotika-db
+      - exotika-minio
+    networks:
+      - exotika-network
+
   exotika-app:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "3000:80"
     container_name: exotika-creation
     restart: unless-stopped
-    environment:
-      - NODE_ENV=production
+    ports:
+      - "3000:80"
+    depends_on:
+      - exotika-backend
     networks:
       - exotika-network
 
 networks:
   exotika-network:
     driver: bridge
+
+volumes:
+  postgres_data:
+  minio_data:

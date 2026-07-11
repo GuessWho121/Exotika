@@ -7,6 +7,7 @@ import { AdminProducts } from "../components/AdminProducts"
 import { AdminTransactions } from "../components/AdminTransactions"
 import { AdminCustomOrders } from "../components/AdminCustomOrders"
 import { AdminDashboard } from "../components/AdminDashboard"
+import { AdminOrders } from "../components/AdminOrders"
 
 export function Admin() {
   const { state } = useAdmin()
@@ -64,7 +65,8 @@ export function Admin() {
       <div className="flex-1">
         {activeTab === "dashboard" && <AdminDashboard onTabChange={setActiveTab} />}
         {activeTab === "products" && <AdminProducts />}
-        {(activeTab === "orders" || activeTab === "transactions") && <AdminTransactions />}
+        {activeTab === "orders" && <AdminOrders />}
+        {activeTab === "transactions" && <AdminTransactions />}
         {activeTab === "custom-orders" && <AdminCustomOrders />}
       </div>
     </div>
