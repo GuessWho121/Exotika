@@ -1,6 +1,6 @@
-import { HashRouter as Router, Routes, Route } from "react-router-dom"
+import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import { CartProvider } from "./contexts/CartContext"
-import { AdminProvider } from "./contexts/AdminContext"
+import { AdminProvider, useAdmin } from "./contexts/AdminContext"
 import { FavoritesProvider } from "./contexts/FavoritesContext"
 import { NotificationProvider } from "./contexts/NotificationContext"
 import { Header } from "./components/Header"
@@ -25,6 +25,63 @@ import { SearchPage } from "./pages/SearchPage"
 
 import { GoogleOAuthProvider } from "@react-oauth/google"
 import { ScrollToTop } from "./components/ScrollToTop"
+
+// 1. Admin Route Guard
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { state } = useAdmin()
+
+  if (state.loading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#E6C747] border-t-transparent"></div>
+      </div>
+    )
+  }
+
+  if (!state.user || !state.isAdmin) {
+    return <Navigate to="/login" replace />
+  }
+
+  return <>{children}</>
+}
+
+// 2. Logged-in Customer Route Guard
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { state } = useAdmin()
+
+  if (state.loading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#E6C747] border-t-transparent"></div>
+      </div>
+    )
+  }
+
+  if (!state.user) {
+    return <Navigate to="/login" replace />
+  }
+
+  return <>{children}</>
+}
+
+// 3. Guest-only Route Guard (diverts authenticated users away from Login/Signup)
+function GuestRoute({ children }: { children: React.ReactNode }) {
+  const { state } = useAdmin()
+
+  if (state.loading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#E6C747] border-t-transparent"></div>
+      </div>
+    )
+  }
+
+  if (state.user) {
+    return <Navigate to="/profile" replace />
+  }
+
+  return <>{children}</>
+}
 
 function App() {
   const googleClientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID || ""
@@ -53,11 +110,27 @@ function App() {
                       <Route path="/order-success" element={<OrderSuccess />} />
                       <Route path="/custom-order" element={<CustomOrder />} />
                       <Route path="/custom-order-success" element={<CustomOrderSuccess />} />
-                      <Route path="/profile" element={<Profile />} />
+                      <Route path="/profile" element={
+                        <ProtectedRoute>
+                          <Profile />
+                        </ProtectedRoute>
+                      } />
                       <Route path="/product/:id" element={<ProductDetail />} />
-                      <Route path="/admin" element={<Admin />} />
-                      <Route path="/login" element={<Login />} />
-                      <Route path="/signup" element={<Signup />} />
+                      <Route path="/admin" element={
+                        <AdminRoute>
+                          <Admin />
+                        </AdminRoute>
+                      } />
+                      <Route path="/login" element={
+                        <GuestRoute>
+                          <Login />
+                        </GuestRoute>
+                      } />
+                      <Route path="/signup" element={
+                        <GuestRoute>
+                          <Signup />
+                        </GuestRoute>
+                      } />
                       <Route path="/search" element={<SearchPage />} />
                     </Routes>
                   </div>
