@@ -22,7 +22,7 @@ import {
   createAddressSchema,
   verifyPhoneSchema
 } from "../controllers/authController.js"
-import { authenticate } from "../middleware/authMiddleware.js"
+import { authenticate, optionalAuthenticate } from "../middleware/authMiddleware.js"
 import { validateRequest } from "../middleware/validateMiddleware.js"
 import { authLimiter } from "../middleware/securityMiddleware.js"
 
@@ -30,7 +30,7 @@ const router = Router()
 
 router.post("/register", authLimiter, validateRequest(registerSchema), register)
 router.post("/login", authLimiter, validateRequest(loginSchema), login)
-router.post("/logout", logout)
+router.post("/logout", optionalAuthenticate as any, logout as any)
 router.post("/send-otp", authLimiter, validateRequest(sendOtpSchema), sendOtp as any)
 router.post("/verify-otp", authLimiter, validateRequest(verifyOtpSchema), verifyOtp as any)
 router.post("/google", authLimiter, validateRequest(googleLoginSchema), googleLogin as any)

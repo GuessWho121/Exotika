@@ -45,6 +45,7 @@ model User {
   zipCode      String?       @map("zip_code")
   phoneVerified Boolean      @default(false) @map("phone_verified")
   role         Role          @default(CUSTOMER)
+  tokenVersion Int           @default(1) @map("token_version")
   createdAt    DateTime      @default(now()) @map("created_at")
   updatedAt    DateTime      @updatedAt @map("updated_at")
   

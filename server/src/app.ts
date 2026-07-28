@@ -39,7 +39,7 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "https://maps.googleapis.com", "https://checkout.razorpay.com"],
+        scriptSrc: ["'self'", "https://maps.googleapis.com", "https://checkout.razorpay.com"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://checkout.razorpay.com"],
         imgSrc: ["'self'", "data:", "https://maps.gstatic.com", "http://localhost:9000", "http://exotika-minio:9000", "https://*.exotikacreation.com", "https://*.razorpay.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],

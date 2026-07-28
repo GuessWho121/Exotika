@@ -132,8 +132,11 @@ export function Checkout() {
   }
 
   // 1. Fetch saved addresses and prefill user info
+  const hasPrefilled = useRef(false)
   useEffect(() => {
     if (user) {
+      if (hasPrefilled.current) return
+      hasPrefilled.current = true
       setFormData(prev => ({
         ...prev,
         name: user.name || "",
@@ -174,6 +177,7 @@ export function Checkout() {
       }
       fetchAddresses()
     } else {
+      hasPrefilled.current = false
       setSelectedAddressId("new")
     }
   }, [user])
@@ -338,6 +342,8 @@ export function Checkout() {
       if (addr) {
         setFormData(prev => ({
           ...prev,
+          name: addr.name || prev.name,
+          phone: addr.phone || prev.phone,
           addressLine1: addr.address || "",
           addressLine2: "",
           city: addr.city || "",
@@ -495,6 +501,7 @@ export function Checkout() {
         shippingCity: formData.city,
         shippingZipCode: formData.zipCode,
         shippingCountry: formData.country,
+        expectedShippingRate: shippingQuote?.rate || 0,
         items: state.items.map((i) => ({
           productId: i.id,
           title: i.title,
@@ -651,14 +658,18 @@ export function Checkout() {
       setIsVerifyingOtp(false)
     }
   }
-
   const handleVerifyAndCheckout = async () => {
     setIsVerifyingOtp(true)
     try {
-      const verifyRes = await fetch("/api/auth/verify-otp", {
+      const verifyUrl = user ? "/api/auth/verify-phone" : "/api/auth/verify-otp"
+      const verifyBody = user
+        ? { phone: formData.phone, otp: otpCode }
+        : { contact: formData.phone, otp: otpCode }
+
+      const verifyRes = await fetch(verifyUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contact: formData.phone, otp: otpCode })
+        body: JSON.stringify(verifyBody)
       })
 
       const verifyJson = await verifyRes.json()
@@ -673,18 +684,8 @@ export function Checkout() {
         return
       }
 
-      // Mark user's phone verified in profile database table
       if (user) {
-        try {
-          await fetch("/api/auth/verify-phone", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ phone: formData.phone })
-          })
-          adminDispatch({ type: "SET_USER", payload: { ...user, phone: formData.phone, phoneVerified: true } })
-        } catch (err) {
-          console.error("Failed to mark phone verified on backend:", err)
-        }
+        adminDispatch({ type: "SET_USER", payload: { ...user, phone: formData.phone, phoneVerified: true } })
       }
 
       // Close modal, clean codes and advance to review details (Step 3)

@@ -19,6 +19,7 @@ export const createOrderSchema = z.object({
     shippingCity: z.string().min(2, "City must be at least 2 characters"),
     shippingZipCode: z.string().min(4, "Zip code must be at least 4 characters"),
     shippingCountry: z.string().optional(),
+    expectedShippingRate: z.number().nonnegative().optional(),
     items: z
       .array(
         z.object({
@@ -50,27 +51,48 @@ export const createOrder = async (
       shippingCity,
       shippingZipCode,
       shippingCountry,
+      expectedShippingRate,
       items
     } = req.body
 
     const userId = req.user?.id || null
 
+    // Determine the items to process based on guest vs authenticated checkout
+    let itemsToProcess = items
+    if (userId) {
+      const dbCartItems = await prisma.cartItem.findMany({
+        where: { userId }
+      })
+      if (dbCartItems.length === 0) {
+        throw new AppError("Your cart is empty", 400)
+      }
+      itemsToProcess = dbCartItems.map(item => ({
+        productId: item.productId,
+        quantity: item.quantity
+      }))
+    }
+
     // 1. Fetch Shipping quote dynamically (based on delivery postcode and number of items)
     const shippingInfo = await calculateShippingQuote(
       shippingZipCode,
-      items.length * 0.5, // Estimate 0.5kg per artwork item
+      itemsToProcess.length * 0.5, // Estimate 0.5kg per artwork item
       false,
       shippingCountry || "India"
     )
 
     const shippingCost = shippingInfo.rate
 
+    // Validate shipping rate consistency to prevent user charge mismatch
+    if (expectedShippingRate !== undefined && Math.abs(shippingCost - expectedShippingRate) > 0.01) {
+      throw new AppError(`Shipping rate has changed. Expected ₹${expectedShippingRate}, but current rate is ₹${shippingCost}. Please reload checkout and review.`, 400)
+    }
+
     // 2. Process total price inside transaction
     const order = await prisma.$transaction(async (tx) => {
       let totalAmount = shippingCost // Start with shipping cost
       const orderItemsToCreate = []
 
-      for (const item of items) {
+      for (const item of itemsToProcess) {
         const product = await tx.product.findUnique({
           where: { id: item.productId }
         })
@@ -348,10 +370,16 @@ export const verifyPayment = async (
       }
     })
 
-    // Clear User Cart items in DB on successful payment
+    // Clear only the purchased items from the User's Cart in DB on successful payment
     if (order.userId) {
+      const productIds = order.items
+        .map(item => item.productId)
+        .filter((id): id is string => id !== null)
       await prisma.cartItem.deleteMany({
-        where: { userId: order.userId }
+        where: {
+          userId: order.userId,
+          productId: { in: productIds }
+        }
       })
     }
 

@@ -41,12 +41,12 @@ export const profileUpdateSchema = z.object({
 
 // Helper: Generate JWT and set HttpOnly Cookie
 const sendToken = (
-  user: { id: string; email: string; role: string },
+  user: { id: string; email: string; role: string; tokenVersion: number },
   statusCode: number,
   res: Response
 ) => {
   const token = jwt.sign(
-    { id: user.id, email: user.email, role: user.role },
+    { id: user.id, email: user.email, role: user.role, tokenVersion: user.tokenVersion },
     env.JWT_SECRET,
     { expiresIn: "7d" }
   )
@@ -135,7 +135,22 @@ export const login = async (
   }
 }
 
-export const logout = (req: AuthRequest, res: Response) => {
+export const logout = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    if (req.user?.id) {
+      await prisma.user.update({
+        where: { id: req.user.id },
+        data: { tokenVersion: { increment: 1 } }
+      })
+    }
+  } catch (err) {
+    logger.error("Failed to increment tokenVersion on logout:", err)
+  }
+
   const cookieOptions: any = {
     expires: new Date(Date.now() + 1000),
     httpOnly: true,
@@ -502,7 +517,8 @@ export const updateAddress = async (req: AuthRequest, res: Response, next: NextF
 
 export const verifyPhoneSchema = z.object({
   body: z.object({
-    phone: z.string().optional()
+    phone: z.string().min(10, "Phone number must be at least 10 digits"),
+    otp: z.string().length(6, "OTP must be exactly 6 digits")
   })
 })
 
@@ -511,13 +527,29 @@ export const verifyPhone = async (req: AuthRequest, res: Response, next: NextFun
     if (!req.user) {
       throw new AppError("Not authenticated", 401)
     }
-    const { phone } = req.body
+    const { phone, otp } = req.body
+
+    const record = otpStore.get(phone)
+    if (!record) {
+      throw new AppError("No OTP requested for this phone number", 400)
+    }
+
+    if (Date.now() > record.expiresAt) {
+      otpStore.delete(phone)
+      throw new AppError("OTP has expired", 400)
+    }
+
+    if (record.otp !== otp) {
+      throw new AppError("Invalid OTP code", 400)
+    }
+
+    otpStore.delete(phone) // Single-use OTP
 
     const updatedUser = await prisma.user.update({
       where: { id: req.user.id },
       data: {
-        phoneVerified: true,
-        ...(phone ? { phone } : {})
+        phone,
+        phoneVerified: true
       }
     })
 

@@ -17,6 +17,7 @@ interface DecodedToken {
   id: string
   email: string
   role: Role
+  tokenVersion?: number
   iat: number
   exp: number
 }
@@ -55,6 +56,11 @@ export const authenticate = async (
 
     if (!user) {
       throw new AppError("User belonging to this token no longer exists.", 401)
+    }
+
+    // Validate tokenVersion to support server-side session revocation
+    if (decoded.tokenVersion !== undefined && decoded.tokenVersion !== user.tokenVersion) {
+      throw new AppError("Session has been revoked. Please log in again.", 401)
     }
 
     // 5. Attach decoded user payload to request
@@ -109,7 +115,7 @@ export const optionalAuthenticate = async (
       const user = await prisma.user.findUnique({
         where: { id: decoded.id }
       })
-      if (user) {
+      if (user && (decoded.tokenVersion === undefined || decoded.tokenVersion === user.tokenVersion)) {
         req.user = {
           id: user.id,
           email: user.email,
