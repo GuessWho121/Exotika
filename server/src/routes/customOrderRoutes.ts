@@ -9,6 +9,7 @@ import {
 import { authenticate, requireAdmin } from "../middleware/authMiddleware.js"
 import { upload } from "../middleware/uploadMiddleware.js"
 import { validateRequest } from "../middleware/validateMiddleware.js"
+import { xssSanitizer } from "../middleware/securityMiddleware.js"
 
 const router = Router()
 
@@ -16,6 +17,7 @@ const router = Router()
 router.post(
   "/",
   upload.array("references", 3), // Handle file stream
+  xssSanitizer,
   (req, res, next) => {
     // Parse form-data before validating with Zod
     next()
