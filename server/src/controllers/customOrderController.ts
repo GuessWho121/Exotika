@@ -112,24 +112,36 @@ export const getCustomOrders = async (
       throw new AppError("Not authenticated", 401)
     }
 
-    let customOrders
-    // Admin gets all requests; registered user gets only their own
-    if (req.user.role === Role.ADMIN) {
-      customOrders = await prisma.customOrder.findMany({
-        include: { references: true },
-        orderBy: { createdAt: "desc" }
-      })
-    } else {
-      customOrders = await prisma.customOrder.findMany({
-        where: { userId: req.user.id },
-        include: { references: true },
-        orderBy: { createdAt: "desc" }
-      })
+    const { page = "1", limit = "10" } = req.query
+    const pageNumber = parseInt(page as string, 10)
+    const limitNumber = parseInt(limit as string, 10)
+    const skip = (pageNumber - 1) * limitNumber
+
+    const where: any = {}
+    if (req.user.role !== Role.ADMIN) {
+      where.userId = req.user.id
     }
+
+    const [customOrders, total] = await prisma.$transaction([
+      prisma.customOrder.findMany({
+        where,
+        include: { references: true },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limitNumber
+      }),
+      prisma.customOrder.count({ where })
+    ])
 
     res.status(200).json({
       status: "success",
       results: customOrders.length,
+      pagination: {
+        page: pageNumber,
+        limit: limitNumber,
+        total,
+        pages: Math.ceil(total / limitNumber)
+      },
       data: { customOrders }
     })
   } catch (error) {

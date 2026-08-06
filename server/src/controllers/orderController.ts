@@ -183,24 +183,36 @@ export const getOrders = async (
       throw new AppError("Not authenticated", 401)
     }
 
-    let orders
-    // Admin gets all orders; standard customer gets only their own orders
-    if (req.user.role === Role.ADMIN) {
-      orders = await prisma.order.findMany({
-        include: { items: true },
-        orderBy: { createdAt: "desc" }
-      })
-    } else {
-      orders = await prisma.order.findMany({
-        where: { userId: req.user.id },
-        include: { items: true },
-        orderBy: { createdAt: "desc" }
-      })
+    const { page = "1", limit = "10" } = req.query
+    const pageNumber = parseInt(page as string, 10)
+    const limitNumber = parseInt(limit as string, 10)
+    const skip = (pageNumber - 1) * limitNumber
+
+    const where: any = {}
+    if (req.user.role !== Role.ADMIN) {
+      where.userId = req.user.id
     }
+
+    const [orders, total] = await prisma.$transaction([
+      prisma.order.findMany({
+        where,
+        include: { items: true },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limitNumber
+      }),
+      prisma.order.count({ where })
+    ])
 
     res.status(200).json({
       status: "success",
       results: orders.length,
+      pagination: {
+        page: pageNumber,
+        limit: limitNumber,
+        total,
+        pages: Math.ceil(total / limitNumber)
+      },
       data: { orders }
     })
   } catch (error) {
