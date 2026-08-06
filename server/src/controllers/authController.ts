@@ -266,9 +266,7 @@ export const verifyOtpSchema = z.object({
 
 export const googleLoginSchema = z.object({
   body: z.object({
-    email: z.string().email("Invalid email format").optional(),
-    name: z.string().min(2, "Name must be at least 2 characters").optional(),
-    token: z.string().optional()
+    token: z.string().min(1, "Google token is required")
   })
 })
 
@@ -331,31 +329,23 @@ export const googleLogin = async (
   next: NextFunction
 ) => {
   try {
-    const { email: bodyEmail, name: bodyName, token } = req.body
-    let email = bodyEmail
-    let name = bodyName
+    const { token } = req.body
 
-    if (token) {
-      const clientId = process.env.GOOGLE_CLIENT_ID
-      if (!clientId) {
-        throw new AppError("GOOGLE_CLIENT_ID environment variable is missing on the server", 500)
-      }
-      const client = new OAuth2Client(clientId)
-      const ticket = await client.verifyIdToken({
-        idToken: token,
-        audience: clientId
-      })
-      const payload = ticket.getPayload()
-      if (!payload || !payload.email) {
-        throw new AppError("Invalid Google token payload", 400)
-      }
-      email = payload.email
-      name = payload.name || "Google User"
+    const clientId = process.env.GOOGLE_CLIENT_ID
+    if (!clientId) {
+      throw new AppError("GOOGLE_CLIENT_ID environment variable is missing on the server", 500)
     }
-
-    if (!email) {
-      throw new AppError("Email is required for Google authentication", 400)
+    const client = new OAuth2Client(clientId)
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: clientId
+    })
+    const payload = ticket.getPayload()
+    if (!payload || !payload.email) {
+      throw new AppError("Invalid Google token payload", 400)
     }
+    const email = payload.email
+    const name = payload.name || "Google User"
 
     let user = await prisma.user.findUnique({ where: { email } })
     
