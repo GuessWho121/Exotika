@@ -58,8 +58,8 @@ const sendToken = (
     sameSite: "lax" as const
   }
 
-  if (env.NODE_ENV === "production") {
-    cookieOptions.domain = ".exotikacreation.com"
+  if (env.COOKIE_DOMAIN) {
+    cookieOptions.domain = env.COOKIE_DOMAIN
   }
 
   res.cookie("token", token, cookieOptions)
@@ -158,8 +158,8 @@ export const logout = async (
     sameSite: "lax" as const
   }
 
-  if (env.NODE_ENV === "production") {
-    cookieOptions.domain = ".exotikacreation.com"
+  if (env.COOKIE_DOMAIN) {
+    cookieOptions.domain = env.COOKIE_DOMAIN
   }
 
   res.cookie("token", "loggedout", cookieOptions)

@@ -9,6 +9,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   JWT_SECRET: z.string().min(8),
   CORS_ORIGIN: z.string().url().default("http://localhost:5173"),
+  COOKIE_DOMAIN: z.string().optional(),
   S3_ENDPOINT: z.string().url(),
   S3_PUBLIC_URL: z.string().url().optional(),
   AWS_ACCESS_KEY_ID: z.string().min(1),
