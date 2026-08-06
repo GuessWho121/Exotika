@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_DB: exotika_db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -22,8 +22,8 @@ services:
       - "9000:9000"   # MinIO API port
       - "9001:9001"   # MinIO Console Console UI
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
@@ -41,13 +41,13 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=8080
-      - DATABASE_URL=postgresql://postgres:${DB_PASSWORD:-postgres}@exotika-db:5432/exotika_db?schema=public
-      - JWT_SECRET=${JWT_SECRET:-supersecretjwtkeyreplaceinproduction}
+      - DATABASE_URL=postgresql://postgres:${DB_PASSWORD}@exotika-db:5432/exotika_db?schema=public
+      - JWT_SECRET=${JWT_SECRET}
       - CORS_ORIGIN=http://localhost:3000
       - S3_ENDPOINT=http://exotika-minio:9000
       - S3_PUBLIC_URL=http://localhost:9000
-      - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER:-minioadmin}
-      - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
+      - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
       - AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME:-exotika-bucket}
       - S3_FORCE_PATH_STYLE=true
     depends_on:
