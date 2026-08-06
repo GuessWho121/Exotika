@@ -27,6 +27,15 @@ const getTransporter = () => {
   return transporter
 }
 
+const escapeHtml = (unsafe: string): string => {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;")
+}
+
 export const sendOrderConfirmationEmail = async (
   toEmail: string,
   customerName: string,
@@ -38,11 +47,13 @@ export const sendOrderConfirmationEmail = async (
   const mailTransporter = getTransporter()
   const from = env.SMTP_FROM || `"Exotika Creation" <exotikacreation@gmail.com>`
 
+  const escapedCustomerName = escapeHtml(customerName)
+
   const itemRowsHtml = items
     .map(
       (item) =>
         `<tr>
-          <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.title}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #ddd;">${escapeHtml(item.title)}</td>
           <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: center;">${item.quantity}</td>
           <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">₹${item.price.toFixed(2)}</td>
         </tr>`
@@ -56,7 +67,7 @@ export const sendOrderConfirmationEmail = async (
         <p style="color: #8C7B00; margin: 5px 0 0 0;">Order Confirmation</p>
       </div>
       
-      <p>Dear <strong>${customerName}</strong>,</p>
+      <p>Dear <strong>${escapedCustomerName}</strong>,</p>
       <p>Thank you for shopping with Exotika! Your payment has been verified, and order <strong>#${orderId.slice(0, 8)}</strong> has been successfully placed. We are preparing your artwork for dispatch.</p>
       
       <h3 style="color: #4A3F00; border-bottom: 1px solid #E6C747; padding-bottom: 5px;">Order Summary</h3>
@@ -121,6 +132,10 @@ export const sendCustomOrderConfirmationEmail = async (
   const mailTransporter = getTransporter()
   const from = env.SMTP_FROM || `"Exotika Creation" <exotikacreation@gmail.com>`
 
+  const escapedCustomerName = escapeHtml(customerName)
+  const escapedType = escapeHtml(type)
+  const escapedDescription = escapeHtml(description)
+
   const emailHtml = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #FFF5CC; background-color: #FFFBEB; color: #4A3F00;">
       <div style="text-align: center; border-bottom: 2px solid #E6C747; padding-bottom: 15px; margin-bottom: 20px;">
@@ -128,16 +143,16 @@ export const sendCustomOrderConfirmationEmail = async (
         <p style="color: #8C7B00; margin: 5px 0 0 0;">Custom Request Confirmed</p>
       </div>
       
-      <p>Dear <strong>${customerName}</strong>,</p>
+      <p>Dear <strong>${escapedCustomerName}</strong>,</p>
       <p>We have successfully received your custom commission request! Our team will review your specifications and get in touch with you shortly via WhatsApp or email to discuss details, sizes, and drafts.</p>
       
       <h3 style="color: #4A3F00; border-bottom: 1px solid #E6C747; padding-bottom: 5px;">Your Commission Details</h3>
       <div style="background-color: #FFF5CC; padding: 15px; rounded: 8px; font-size: 14px; line-height: 1.6; border: 1px solid #E6C747; margin-bottom: 20px;">
         <div><strong>Request Reference ID:</strong> #${customOrderId}</div>
-        <div><strong>Artwork Category:</strong> <span style="text-transform: capitalize;">${type}</span></div>
+        <div><strong>Artwork Category:</strong> <span style="text-transform: capitalize;">${escapedType}</span></div>
         <div><strong>Proposed Budget Cap:</strong> ₹${budget.toFixed(2)}</div>
         <div style="margin-top: 10px;"><strong>Project Description:</strong></div>
-        <div style="font-style: italic; color: #8C7B00; padding-left: 10px; border-left: 3px solid #E6C747; margin-top: 5px;">"${description}"</div>
+        <div style="font-style: italic; color: #8C7B00; padding-left: 10px; border-left: 3px solid #E6C747; margin-top: 5px;">"${escapedDescription}"</div>
       </div>
 
       <div style="border-top: 1px solid #E6C747; padding-top: 15px; font-size: 12px; text-align: center; color: #8C7B00; line-height: 1.6;">
