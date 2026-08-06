@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useReducer, useEffect, type ReactNode, useCallback } from "react"
+import { useNotifications } from "./NotificationContext"
 
 export interface Product {
   id: string
@@ -115,6 +116,7 @@ function adminReducer(state: AdminState, action: AdminAction): AdminState {
 }
 
 export function AdminProvider({ children }: { children: ReactNode }) {
+  const { addNotification } = useNotifications()
   const [state, dispatch] = useReducer(adminReducer, {
     products: [],
     transactions: [],
@@ -144,11 +146,14 @@ export function AdminProvider({ children }: { children: ReactNode }) {
           medium: p.medium || undefined
         }))
         dispatch({ type: "SET_PRODUCTS", payload: formatted })
+      } else {
+        addNotification({ type: "error", title: "Error", message: "Failed to load product catalog." })
       }
     } catch (err) {
       console.error("Failed to fetch products:", err)
+      addNotification({ type: "error", title: "Network Error", message: "Failed to load product catalog." })
     }
-  }, [])
+  }, [addNotification])
 
   // 2. Fetch standard transactions (Admin only API)
   const refreshTransactions = useCallback(async () => {
@@ -177,11 +182,14 @@ export function AdminProvider({ children }: { children: ReactNode }) {
           }))
         }))
         dispatch({ type: "SET_TRANSACTIONS", payload: formatted })
+      } else {
+        addNotification({ type: "error", title: "Error", message: "Failed to load transactions." })
       }
     } catch (err) {
       console.error("Failed to fetch transactions:", err)
+      addNotification({ type: "error", title: "Network Error", message: "Failed to load transactions." })
     }
-  }, [])
+  }, [addNotification])
 
   // 3. Fetch custom orders (comissions requests)
   const refreshCustomOrders = useCallback(async () => {
@@ -205,11 +213,14 @@ export function AdminProvider({ children }: { children: ReactNode }) {
           referenceImages: (c.references || []).map((r: any) => r.referenceUrl)
         }))
         dispatch({ type: "SET_CUSTOM_ORDERS", payload: formatted })
+      } else {
+        addNotification({ type: "error", title: "Error", message: "Failed to load custom orders." })
       }
     } catch (err) {
       console.error("Failed to fetch custom orders:", err)
+      addNotification({ type: "error", title: "Network Error", message: "Failed to load custom orders." })
     }
-  }, [])
+  }, [addNotification])
 
   // 4. Check active auth session
   const fetchSession = useCallback(async (): Promise<User | null> => {
@@ -222,14 +233,21 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         dispatch({ type: "SET_USER", payload: user })
         dispatch({ type: "SET_LOADING", payload: false })
         return user
+      } else if (res.status === 401) {
+        dispatch({ type: "SET_USER", payload: null })
+        dispatch({ type: "SET_LOADING", payload: false })
+        return null
+      } else {
+        addNotification({ type: "error", title: "Session Error", message: "Failed to verify session." })
       }
     } catch (err) {
       console.error("Session verification failed:", err)
+      addNotification({ type: "error", title: "Network Error", message: "Failed to connect to authentication server." })
     }
     dispatch({ type: "SET_USER", payload: null })
     dispatch({ type: "SET_LOADING", payload: false })
     return null
-  }, [refreshTransactions, refreshCustomOrders])
+  }, [addNotification])
 
   // 5. Logout User Session
   const logoutUser = useCallback(async () => {
