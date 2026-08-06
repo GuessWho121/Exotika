@@ -44,8 +44,8 @@ export function SearchPage() {
         if (res.ok) {
           const json = await res.json()
           setProducts(json.data.products || [])
-          setTotalResults(json.pagination?.totalResults || 0)
-          setTotalPages(json.pagination?.totalPages || 1)
+          setTotalResults(json.pagination?.total || 0)
+          setTotalPages(json.pagination?.pages || 1)
         }
       } catch (err) {
         console.error("Failed to load search results:", err)

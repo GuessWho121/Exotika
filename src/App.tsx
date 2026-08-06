@@ -9,10 +9,7 @@ import { Footer } from "./components/Footer"
 import { NotificationContainer } from "./components/NotificationContainer"
 
 const Home = lazy(() => import("./pages/Home").then(m => ({ default: m.Home })))
-const Paintings = lazy(() => import("./pages/Paintings").then(m => ({ default: m.Paintings })))
-const Crafts = lazy(() => import("./pages/Crafts").then(m => ({ default: m.Crafts })))
-const ToteBags = lazy(() => import("./pages/ToteBags").then(m => ({ default: m.ToteBags })))
-const Apparel = lazy(() => import("./pages/Apparel").then(m => ({ default: m.Apparel })))
+const CategoryPage = lazy(() => import("./pages/CategoryPage").then(m => ({ default: m.CategoryPage })))
 const Cart = lazy(() => import("./pages/Cart").then(m => ({ default: m.Cart })))
 const Checkout = lazy(() => import("./pages/Checkout").then(m => ({ default: m.Checkout })))
 const OrderSuccess = lazy(() => import("./pages/OrderSuccess").then(m => ({ default: m.OrderSuccess })))
@@ -108,10 +105,42 @@ function App() {
                     }>
                       <Routes>
                         <Route path="/" element={<Home />} />
-                        <Route path="/paintings" element={<Paintings />} />
-                        <Route path="/crafts" element={<Crafts />} />
-                        <Route path="/tote-bags" element={<ToteBags />} />
-                        <Route path="/apparel" element={<Apparel />} />
+                        <Route path="/paintings" element={
+                          <CategoryPage
+                            category="PAINTING"
+                            title="Beautiful Original Paintings"
+                            description="Discover our collection of original paintings that capture the beauty of nature, emotion, and imagination. Each piece is carefully crafted with attention to detail and artistic vision."
+                            emptyTitle="No paintings available"
+                            emptyDescription="Check back soon for new artwork!"
+                          />
+                        } />
+                        <Route path="/crafts" element={
+                          <CategoryPage
+                            category="CRAFT"
+                            title="Handmade Crafts"
+                            description="Explore our unique collection of handcrafted items. From home decor to personal accessories, each craft is created with love and traditional craftsmanship."
+                            emptyTitle="No crafts available"
+                            emptyDescription="Check back soon for new handmade items!"
+                          />
+                        } />
+                        <Route path="/tote-bags" element={
+                          <CategoryPage
+                            category="TOTE_BAG"
+                            title="Artistic Tote Bags"
+                            description="Carry your essentials in style with our original printed and hand-painted tote bags, combining utility with beautiful artistic expressions."
+                            emptyTitle="No tote bags available"
+                            emptyDescription="Check back soon for new bag designs!"
+                          />
+                        } />
+                        <Route path="/apparel" element={
+                          <CategoryPage
+                            category="APPAREL"
+                            title="Artistic Apparel"
+                            description="Wear your love for art. Explore our collection of premium, artistically-designed clothing items made for comfort and style."
+                            emptyTitle="No apparel items available"
+                            emptyDescription="Check back soon for new apparel collections!"
+                          />
+                        } />
                         <Route path="/cart" element={<Cart />} />
                         <Route path="/checkout" element={<Checkout />} />
                         <Route path="/order-success" element={<OrderSuccess />} />
