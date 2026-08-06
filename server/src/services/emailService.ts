@@ -104,7 +104,7 @@ export const sendOrderConfirmationEmail = async (
   `
 
   if (!mailTransporter) {
-    logger.info(`[EMAIL SIMULATOR] 📨 Order Confirmation Email sent to [${toEmail}] for Order [${orderId}]:\nCustomer: ${customerName}\nTotal: ₹${totalAmount}\nItems:\n${JSON.stringify(items, null, 2)}`)
+    logger.debug(`[EMAIL SIMULATOR] 📨 Order Confirmation Email sent to [${toEmail}] for Order [${orderId}]:\nCustomer: ${customerName}\nTotal: ₹${totalAmount}\nItems:\n${JSON.stringify(items, null, 2)}`)
     return
   }
 
@@ -163,7 +163,7 @@ export const sendCustomOrderConfirmationEmail = async (
   `
 
   if (!mailTransporter) {
-    logger.info(`[EMAIL SIMULATOR] 📨 Custom Order Request Email sent to [${toEmail}] for Request [${customOrderId}]:\nCustomer: ${customerName}\nType: ${type}\nBudget: ₹${budget}\nDescription: ${description}`)
+    logger.debug(`[EMAIL SIMULATOR] 📨 Custom Order Request Email sent to [${toEmail}] for Request [${customOrderId}]:\nCustomer: ${customerName}\nType: ${type}\nBudget: ₹${budget}\nDescription: ${description}`)
     return
   }
 
