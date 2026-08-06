@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react"
 import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import { CartProvider } from "./contexts/CartContext"
 import { AdminProvider, useAdmin } from "./contexts/AdminContext"
@@ -6,22 +7,23 @@ import { NotificationProvider } from "./contexts/NotificationContext"
 import { Header } from "./components/Header"
 import { Footer } from "./components/Footer"
 import { NotificationContainer } from "./components/NotificationContainer"
-import { Home } from "./pages/Home"
-import { Paintings } from "./pages/Paintings"
-import { Crafts } from "./pages/Crafts"
-import { ToteBags } from "./pages/ToteBags"
-import { Apparel } from "./pages/Apparel"
-import { Cart } from "./pages/Cart"
-import { Checkout } from "./pages/Checkout"
-import { OrderSuccess } from "./pages/OrderSuccess"
-import { CustomOrder } from "./pages/CustomOrder"
-import { CustomOrderSuccess } from "./pages/CustomOrderSuccess"
-import { Profile } from "./pages/Profile"
-import { ProductDetail } from "./pages/ProductDetail"
-import { Admin } from "./pages/Admin"
-import { Login } from "./pages/Login"
-import { Signup } from "./pages/Signup"
-import { SearchPage } from "./pages/SearchPage"
+
+const Home = lazy(() => import("./pages/Home").then(m => ({ default: m.Home })))
+const Paintings = lazy(() => import("./pages/Paintings").then(m => ({ default: m.Paintings })))
+const Crafts = lazy(() => import("./pages/Crafts").then(m => ({ default: m.Crafts })))
+const ToteBags = lazy(() => import("./pages/ToteBags").then(m => ({ default: m.ToteBags })))
+const Apparel = lazy(() => import("./pages/Apparel").then(m => ({ default: m.Apparel })))
+const Cart = lazy(() => import("./pages/Cart").then(m => ({ default: m.Cart })))
+const Checkout = lazy(() => import("./pages/Checkout").then(m => ({ default: m.Checkout })))
+const OrderSuccess = lazy(() => import("./pages/OrderSuccess").then(m => ({ default: m.OrderSuccess })))
+const CustomOrder = lazy(() => import("./pages/CustomOrder").then(m => ({ default: m.CustomOrder })))
+const CustomOrderSuccess = lazy(() => import("./pages/CustomOrderSuccess").then(m => ({ default: m.CustomOrderSuccess })))
+const Profile = lazy(() => import("./pages/Profile").then(m => ({ default: m.Profile })))
+const ProductDetail = lazy(() => import("./pages/ProductDetail").then(m => ({ default: m.ProductDetail })))
+const Admin = lazy(() => import("./pages/Admin").then(m => ({ default: m.Admin })))
+const Login = lazy(() => import("./pages/Login").then(m => ({ default: m.Login })))
+const Signup = lazy(() => import("./pages/Signup").then(m => ({ default: m.Signup })))
+const SearchPage = lazy(() => import("./pages/SearchPage").then(m => ({ default: m.SearchPage })))
 
 import { GoogleOAuthProvider } from "@react-oauth/google"
 import { ScrollToTop } from "./components/ScrollToTop"
@@ -99,40 +101,46 @@ function App() {
                 <NotificationContainer />
                 <main className="flex flex-1 flex-col items-center">
                   <div className="w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 mt-6 md:mt-24">
-                    <Routes>
-                      <Route path="/" element={<Home />} />
-                      <Route path="/paintings" element={<Paintings />} />
-                      <Route path="/crafts" element={<Crafts />} />
-                      <Route path="/tote-bags" element={<ToteBags />} />
-                      <Route path="/apparel" element={<Apparel />} />
-                      <Route path="/cart" element={<Cart />} />
-                      <Route path="/checkout" element={<Checkout />} />
-                      <Route path="/order-success" element={<OrderSuccess />} />
-                      <Route path="/custom-order" element={<CustomOrder />} />
-                      <Route path="/custom-order-success" element={<CustomOrderSuccess />} />
-                      <Route path="/profile" element={
-                        <ProtectedRoute>
-                          <Profile />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/product/:id" element={<ProductDetail />} />
-                      <Route path="/admin" element={
-                        <AdminRoute>
-                          <Admin />
-                        </AdminRoute>
-                      } />
-                      <Route path="/login" element={
-                        <GuestRoute>
-                          <Login />
-                        </GuestRoute>
-                      } />
-                      <Route path="/signup" element={
-                        <GuestRoute>
-                          <Signup />
-                        </GuestRoute>
-                      } />
-                      <Route path="/search" element={<SearchPage />} />
-                    </Routes>
+                    <Suspense fallback={
+                      <div className="flex min-h-[50vh] items-center justify-center">
+                        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#E6C747] border-t-transparent"></div>
+                      </div>
+                    }>
+                      <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/paintings" element={<Paintings />} />
+                        <Route path="/crafts" element={<Crafts />} />
+                        <Route path="/tote-bags" element={<ToteBags />} />
+                        <Route path="/apparel" element={<Apparel />} />
+                        <Route path="/cart" element={<Cart />} />
+                        <Route path="/checkout" element={<Checkout />} />
+                        <Route path="/order-success" element={<OrderSuccess />} />
+                        <Route path="/custom-order" element={<CustomOrder />} />
+                        <Route path="/custom-order-success" element={<CustomOrderSuccess />} />
+                        <Route path="/profile" element={
+                          <ProtectedRoute>
+                            <Profile />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/product/:id" element={<ProductDetail />} />
+                        <Route path="/admin" element={
+                          <AdminRoute>
+                            <Admin />
+                          </AdminRoute>
+                        } />
+                        <Route path="/login" element={
+                          <GuestRoute>
+                            <Login />
+                          </GuestRoute>
+                        } />
+                        <Route path="/signup" element={
+                          <GuestRoute>
+                            <Signup />
+                          </GuestRoute>
+                        } />
+                        <Route path="/search" element={<SearchPage />} />
+                      </Routes>
+                    </Suspense>
                   </div>
                 </main>
                 <Footer />
