@@ -65,10 +65,10 @@ export const errorHandler = (
   }
 
   // 4. Default Unknown Internal Server Error
-  const isProd = process.env.NODE_ENV === "production"
+  const isDev = process.env.NODE_ENV === "development"
   return res.status(500).json({
     status: "error",
     message: "Internal server error occurred",
-    ...(isProd ? {} : { stack: err.stack })
+    ...(isDev ? { stack: err.stack } : {})
   })
 }
