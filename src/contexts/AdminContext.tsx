@@ -3,6 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useReducer, useEffect, type ReactNode, useCallback } from "react"
 import { useNotifications } from "./NotificationContext"
+import type { ProductResponse, OrderResponse, OrderItemResponse, CustomOrderResponse } from "../types/api"
 
 export interface Product {
   id: string
@@ -132,7 +133,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       const res = await fetch("/api/products")
       if (res.ok) {
         const json = await res.json()
-        const formatted: Product[] = json.data.products.map((p: any) => ({
+        const formatted: Product[] = json.data.products.map((p: ProductResponse) => ({
           id: p.id,
           title: p.title,
           price: Number(p.price),
@@ -161,7 +162,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       const res = await fetch("/api/orders")
       if (res.ok) {
         const json = await res.json()
-        const formatted: Transaction[] = json.data.orders.map((o: any) => ({
+        const formatted: Transaction[] = json.data.orders.map((o: OrderResponse) => ({
           id: o.id,
           total: Number(o.totalAmount),
           status: o.status.toLowerCase() as any,
@@ -174,7 +175,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
             phone: o.customerPhone,
             address: `${o.shippingAddress}, ${o.shippingCity} - ${o.shippingZipCode}`
           },
-          items: (o.items || []).map((i: any) => ({
+          items: (o.items || []).map((i: OrderItemResponse) => ({
             id: i.productId || "",
             title: i.title,
             price: Number(i.price),
@@ -197,7 +198,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       const res = await fetch("/api/custom-orders")
       if (res.ok) {
         const json = await res.json()
-        const formatted: CustomOrder[] = json.data.customOrders.map((c: any) => ({
+        const formatted: CustomOrder[] = json.data.customOrders.map((c: CustomOrderResponse) => ({
           id: c.id,
           type: c.type.toLowerCase() as any,
           description: c.description,
@@ -210,7 +211,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
             email: c.customerEmail,
             phone: c.customerPhone
           },
-          referenceImages: (c.references || []).map((r: any) => r.referenceUrl)
+          referenceImages: (c.references || []).map((r: { referenceUrl: string }) => r.referenceUrl)
         }))
         dispatch({ type: "SET_CUSTOM_ORDERS", payload: formatted })
       } else {

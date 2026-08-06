@@ -3,6 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useReducer, useEffect, type ReactNode } from "react"
 import { useAdmin } from "./AdminContext"
+import type { FavoriteApiResponse } from "../types/api"
 
 interface FavoritesState {
   favoriteIds: string[]
@@ -75,7 +76,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
           const res = await fetch("/api/products/user/favorites")
           if (res.ok) {
             const json = await res.json()
-            const ids = json.data.favorites.map((p: any) => p.id)
+            const ids = json.data.favorites.map((p: FavoriteApiResponse) => p.id)
             dispatch({ type: "SET_FAVORITES", payload: ids })
           }
         } catch (err) {

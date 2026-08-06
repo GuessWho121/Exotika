@@ -5,6 +5,7 @@ import { User, Package, Settings, Heart, MapPin, Phone, Mail, Edit, Save, X } fr
 import { useNavigate, useLocation } from "react-router-dom"
 import { useAdmin } from "../contexts/AdminContext"
 import { useFavorites } from "../contexts/FavoritesContext"
+import type { UserAddressResponse, GooglePlaceSuggestion } from "../types/api"
 
 interface UserProfile {
   id: string
@@ -180,7 +181,7 @@ export function Profile() {
     }
   }
 
-  const handleAddressEditInit = (addr: any) => {
+  const handleAddressEditInit = (addr: UserAddressResponse) => {
     setEditingAddressId(addr.id)
     setAddressForm({
       title: addr.title,
@@ -248,7 +249,7 @@ export function Profile() {
 
 
 
-  const handleBookSuggestionSelect = (suggestion: any) => {
+  const handleBookSuggestionSelect = (suggestion: GooglePlaceSuggestion) => {
     setShowBookSuggestions(false)
     if (!window.google || !window.google.maps) return
 
@@ -283,7 +284,7 @@ export function Profile() {
             }
           }
 
-          const finalAddress = [streetAddress.trim(), sublocality.trim()].filter(Boolean).join(", ") || place.name || suggestion.structured_formatting.main_text
+          const finalAddress = [streetAddress.trim(), sublocality.trim()].filter(Boolean).join(", ") || place.name || suggestion.structured_formatting?.main_text
           setAddressForm(prev => ({
             ...prev,
             address: finalAddress,

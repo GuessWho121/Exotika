@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useReducer, useEffect, useState, type ReactNode } from "react"
+import { createContext, useContext, useReducer, useEffect, useState, useRef, type ReactNode } from "react"
 import { useAdmin } from "./AdminContext"
 
 export interface CartItem {
@@ -107,9 +107,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false)
   const { state: adminState } = useAdmin()
   const user = adminState.user
+  const skipSyncRef = useRef(true)
 
   // Load initial cart from localStorage or backend database on mount/login change
   useEffect(() => {
+    setIsInitialized(false)
+    skipSyncRef.current = true
     const loadCart = async () => {
       if (user) {
         try {
@@ -131,14 +134,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
             if (localItems.length > 0) {
               // Merge local guest items into database cart
-              const mergedMap = new Map<string, any>()
-              dbItems.forEach((item: any) => {
+              const mergedMap = new Map<string, CartItem>()
+              dbItems.forEach((item: CartItem) => {
                 mergedMap.set(item.id, item)
               })
               
-              localItems.forEach((item: any) => {
-                if (mergedMap.has(item.id)) {
-                  const existing = mergedMap.get(item.id)
+              localItems.forEach((item: CartItem) => {
+                const existing = mergedMap.get(item.id)
+                if (existing) {
                   mergedMap.set(item.id, {
                     ...existing,
                     quantity: existing.quantity + item.quantity
@@ -155,7 +158,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                  items: mergedItems.map(item => ({
+                  items: mergedItems.map((item: CartItem) => ({
                     productId: item.id,
                     quantity: item.quantity
                   }))
@@ -170,8 +173,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
                   type: "INIT_CART",
                   payload: {
                     items: updatedItems,
-                    total: updatedItems.reduce((sum: number, i: any) => sum + i.price * i.quantity, 0),
-                    itemCount: updatedItems.reduce((sum: number, i: any) => sum + i.quantity, 0)
+                    total: updatedItems.reduce((sum: number, i: CartItem) => sum + i.price * i.quantity, 0),
+                    itemCount: updatedItems.reduce((sum: number, i: CartItem) => sum + i.quantity, 0)
                   }
                 })
                 
@@ -184,8 +187,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 type: "INIT_CART",
                 payload: {
                   items: dbItems,
-                  total: dbItems.reduce((sum: number, i: any) => sum + i.price * i.quantity, 0),
-                  itemCount: dbItems.reduce((sum: number, i: any) => sum + i.quantity, 0)
+                  total: dbItems.reduce((sum: number, i: CartItem) => sum + i.price * i.quantity, 0),
+                  itemCount: dbItems.reduce((sum: number, i: CartItem) => sum + i.quantity, 0)
                 }
               })
             }
@@ -224,6 +227,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Persist cart changes to localStorage or DB
   useEffect(() => {
     if (isInitialized) {
+      if (skipSyncRef.current) {
+        skipSyncRef.current = false
+        return
+      }
       if (user) {
         const syncCartWithDb = async () => {
           try {

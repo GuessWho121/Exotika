@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom"
 import { useCart } from "../contexts/CartContext"
 import { useAdmin } from "../contexts/AdminContext"
 import { useNotifications } from "../contexts/NotificationContext"
+import type { GooglePlaceSuggestion } from "../types/api"
 import { Input } from "../components/ui/input"
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "../components/ui/card"
 import { X, MapPin } from "lucide-react"
@@ -197,7 +198,7 @@ export function Checkout() {
     return cleaned.trim()
   }
 
-  const handleSuggestionSelect = (suggestion: any) => {
+  const handleSuggestionSelect = (suggestion: GooglePlaceSuggestion) => {
     setShowSuggestions(false)
     if (!window.google || !window.google.maps) return
 
@@ -232,7 +233,7 @@ export function Checkout() {
             }
           }
 
-          const finalLine2 = [streetAddress.trim(), sublocality.trim()].filter(Boolean).join(", ") || place.name || suggestion.structured_formatting.main_text
+          const finalLine2 = [streetAddress.trim(), sublocality.trim()].filter(Boolean).join(", ") || place.name || suggestion.structured_formatting?.main_text
 
           setFormData(prev => ({
             ...prev,
