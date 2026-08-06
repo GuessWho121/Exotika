@@ -324,6 +324,19 @@ export const verifySandboxPayment = async (
       throw new AppError("Order not found", 404)
     }
 
+    if (order.isPaid) {
+      return res.status(200).send(`
+        <html>
+          <body style="font-family: sans-serif; text-align: center; padding-top: 50px; background: #FFFBEB;">
+            <h1 style="color: #10B981; margin-bottom: 20px;">Payment Successful!</h1>
+            <p>Order <strong>${orderId}</strong> is verified as Paid.</p>
+            <p>Payment ID: <code>${order.paymentId || paymentId}</code></p>
+            <p style="margin-top: 30px;"><a href="http://localhost:5173/#/order-success" style="color: #534b07; text-decoration: underline; font-weight: bold;">Return to Exotika Shop</a></p>
+          </body>
+        </html>
+      `)
+    }
+
     await prisma.order.update({
       where: { id: orderId },
       data: {
@@ -374,6 +387,14 @@ export const verifyPayment = async (
 
     if (!order) {
       throw new AppError("Order not found", 404)
+    }
+
+    if (order.isPaid) {
+      return res.status(200).json({
+        status: "success",
+        message: "Payment already verified previously",
+        data: { order }
+      })
     }
 
     const updatedOrder = await prisma.order.update({
