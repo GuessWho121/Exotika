@@ -29,7 +29,18 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   SMTP_FROM: z.string().optional()
-})
+}).refine(
+  (data) => {
+    if (data.NODE_ENV === "production") {
+      return !!data.RAZORPAY_KEY_ID && !!data.RAZORPAY_KEY_SECRET
+    }
+    return true
+  },
+  {
+    message: "RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET are required in production mode",
+    path: ["RAZORPAY_KEY_SECRET"]
+  }
+)
 
 const parsed = envSchema.safeParse(process.env)
 

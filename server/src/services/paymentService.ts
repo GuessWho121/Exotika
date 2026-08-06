@@ -11,6 +11,16 @@ export interface RazorpayOrderResponse {
   isSandbox: boolean
 }
 
+// Timing-safe comparison helper to mitigate side-channel timing attacks
+export const timingSafeCompare = (a: string, b: string): boolean => {
+  const aBuf = Buffer.from(a, "utf-8")
+  const bBuf = Buffer.from(b, "utf-8")
+  if (aBuf.length !== bBuf.length) {
+    return false
+  }
+  return crypto.timingSafeEqual(aBuf, bBuf)
+}
+
 // Generates a new order on Razorpay servers
 export const createRazorpayOrder = async (
   orderId: string,
@@ -21,6 +31,9 @@ export const createRazorpayOrder = async (
 
   // Fallback to simulated payment parameters if keys are unconfigured
   if (!keyId || !keySecret) {
+    if (env.NODE_ENV === "production") {
+      throw new Error("Razorpay credentials (RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET) are missing on the production server.")
+    }
     logger.warn("⚠️ Razorpay credentials (RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET) are missing. Running in simulated Sandbox Mode.")
     return {
       id: `rzp_mock_${orderId}_${Date.now()}`,
@@ -68,15 +81,8 @@ export const createRazorpayOrder = async (
       isSandbox: false
     }
   } catch (error) {
-    logger.error("❌ Exception during Razorpay Order creation, returning fallback sandbox order:", error)
-    return {
-      id: `rzp_mock_${orderId}_${Date.now()}`,
-      amount: Math.round(amount * 100),
-      currency: "INR",
-      receipt: orderId,
-      status: "created",
-      isSandbox: true
-    }
+    logger.error("❌ Exception during Razorpay Order creation:", error)
+    throw error
   }
 }
 
@@ -88,12 +94,17 @@ export const verifyRazorpaySignature = (
 ): boolean => {
   const keySecret = env.RAZORPAY_KEY_SECRET
 
-  // Handle mock signatures in sandbox environment
-  if (razorpayOrderId.startsWith("rzp_mock_") || !keySecret) {
+  // Handle mock signatures in sandbox environment only when NOT in production
+  if (env.NODE_ENV !== "production" && (razorpayOrderId.startsWith("rzp_mock_") || !keySecret)) {
     const expectedMockSig = `sig_${razorpayOrderId}_${razorpayPaymentId}`
     const isMockValid = razorpaySignature === expectedMockSig
     logger.info(`[SANDBOX] Verifying simulated payment signature. Valid: ${isMockValid}`)
     return isMockValid
+  }
+
+  if (!keySecret) {
+    logger.error("❌ Cannot verify signature: RAZORPAY_KEY_SECRET is not configured.")
+    return false
   }
 
   try {
@@ -102,7 +113,7 @@ export const verifyRazorpaySignature = (
     hmac.update(`${razorpayOrderId}|${razorpayPaymentId}`)
     const generatedSignature = hmac.digest("hex")
 
-    const isValid = generatedSignature === razorpaySignature
+    const isValid = timingSafeCompare(generatedSignature, razorpaySignature)
     logger.info(`[Razorpay Signature Verification] Order ${razorpayOrderId}. Valid: ${isValid}`)
     return isValid
   } catch (error: any) {
