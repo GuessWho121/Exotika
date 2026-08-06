@@ -4,6 +4,7 @@ import os from "os"
 import ClamScan from "clamscan"
 import { logger } from "../utils/logger.js"
 import { AppError } from "../middleware/errorMiddleware.js"
+import { env } from "../config/env.js"
 
 // Valid magic number headers (hex strings)
 const MAGIC_NUMBERS = {
@@ -95,6 +96,10 @@ export const scanFileBufferForViruses = async (buffer: Buffer, originalName: str
     )
     
     if (isClamError || error.code === "ENOENT") {
+      if (env.NODE_ENV === "production") {
+        logger.error("❌ ClamAV Daemon connection failed on production server.")
+        throw new AppError("Virus scanner is currently unavailable.", 500)
+      }
       logger.warn(`⚠️ ClamAV Daemon not active or scanner unconfigured. Running simulated sandbox scan.`)
       
       // Simulated sandbox scan check: look for specific test strings (like EICAR test file string)
