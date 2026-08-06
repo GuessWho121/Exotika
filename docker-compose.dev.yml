@@ -46,7 +46,7 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=8080
-      - DATABASE_URL=postgresql://postgres:postgres@exotika-db:5432/exotika_db?schema=public
+      - DATABASE_URL=postgresql://postgres:postgres@exotika-db:5432/exotika_db?schema=public&connection_limit=10
       - JWT_SECRET=supersecretjwtkeyreplaceinproduction
       - CORS_ORIGIN=http://localhost:5173
       - S3_ENDPOINT=http://exotika-minio:9000
