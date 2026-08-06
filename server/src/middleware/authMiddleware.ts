@@ -47,7 +47,7 @@ export const authenticate = async (
     }
 
     // 3. Verify JWT token signature
-    const decoded = jwt.verify(token, env.JWT_SECRET) as DecodedToken
+    const decoded = jwt.verify(token, env.JWT_SECRET, { algorithms: ["HS256"] }) as DecodedToken
 
     // 4. Verify user still exists in the database
     const user = await prisma.user.findUnique({
@@ -111,7 +111,7 @@ export const optionalAuthenticate = async (
     }
 
     if (token) {
-      const decoded = jwt.verify(token, env.JWT_SECRET) as DecodedToken
+      const decoded = jwt.verify(token, env.JWT_SECRET, { algorithms: ["HS256"] }) as DecodedToken
       const user = await prisma.user.findUnique({
         where: { id: decoded.id }
       })
