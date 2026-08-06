@@ -112,6 +112,8 @@ model Order {
   user            User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
   items           OrderItem[]
 
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
   @@map("orders")
 }
 
@@ -126,6 +128,8 @@ model OrderItem {
   order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
+  @@index([orderId])
+  @@index([productId])
   @@map("order_items")
 }
 
@@ -146,6 +150,8 @@ model CustomOrder {
   user          User?                  @relation(fields: [userId], references: [id], onDelete: SetNull)
   references    CustomOrderReference[]
 
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
   @@map("custom_orders")
 }
 
@@ -157,6 +163,7 @@ model CustomOrderReference {
 
   customOrder   CustomOrder @relation(fields: [customOrderId], references: [id], onDelete: Cascade)
 
+  @@index([customOrderId])
   @@map("custom_order_references")
 }
 
@@ -203,5 +210,7 @@ model Review {
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([productId])
+  @@index([userId])
   @@map("reviews")
 }
