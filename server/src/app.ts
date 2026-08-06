@@ -10,6 +10,7 @@ import productRoutes from "./routes/productRoutes.js"
 import orderRoutes from "./routes/orderRoutes.js"
 import customOrderRoutes from "./routes/customOrderRoutes.js"
 import cartRoutes from "./routes/cartRoutes.js"
+import storageRoutes from "./routes/storageRoutes.js"
 import { logger } from "./utils/logger.js"
 import { xssSanitizer, authLimiter, customOrderLimiter } from "./middleware/securityMiddleware.js"
 
@@ -87,6 +88,7 @@ app.use("/api/products", productRoutes)
 app.use("/api/orders", orderRoutes)
 app.use("/api/custom-orders", customOrderLimiter, customOrderRoutes)
 app.use("/api/cart", cartRoutes)
+app.use("/api/storage", storageRoutes)
 
 // 7. Health check endpoint
 app.get("/health", (req, res) => {
