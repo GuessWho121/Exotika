@@ -105,6 +105,20 @@ export const createOrder = async (
           throw new AppError(`Product '${product.title}' is currently out of stock`, 400)
         }
 
+        try {
+          await tx.product.update({
+            where: {
+              id: product.id,
+              inStock: true
+            },
+            data: {
+              inStock: false
+            }
+          })
+        } catch (err) {
+          throw new AppError(`Product '${product.title}' was just purchased by another customer.`, 400)
+        }
+
         const price = Number(product.price)
         totalAmount += price * item.quantity
 
