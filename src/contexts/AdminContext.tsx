@@ -220,12 +220,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         const json = await res.json()
         const user: User = json.data.user
         dispatch({ type: "SET_USER", payload: user })
-        
-        // Fetch Admin data if appropriate
-        if (user.role === "ADMIN") {
-          refreshTransactions()
-          refreshCustomOrders()
-        }
         dispatch({ type: "SET_LOADING", payload: false })
         return user
       }

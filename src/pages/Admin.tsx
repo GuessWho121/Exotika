@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Package, ShoppingCart, Palette, BarChart3, Eye } from 'lucide-react'
 import { useAdmin } from "../contexts/AdminContext"
 import { AdminProducts } from "../components/AdminProducts"
@@ -10,8 +10,13 @@ import { AdminDashboard } from "../components/AdminDashboard"
 import { AdminOrders } from "../components/AdminOrders"
 
 export function Admin() {
-  const { state } = useAdmin()
+  const { state, refreshTransactions, refreshCustomOrders } = useAdmin()
   const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "orders" | "transactions" | "custom-orders">("dashboard")
+
+  useEffect(() => {
+    refreshTransactions()
+    refreshCustomOrders()
+  }, [refreshTransactions, refreshCustomOrders])
 
   const tabs = [
     { id: "dashboard", label: "Dashboard", icon: BarChart3 },
