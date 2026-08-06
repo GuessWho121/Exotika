@@ -31,6 +31,12 @@ COPY --from=builder /usr/src/app/dist ./dist
 COPY --from=builder /usr/src/app/prisma ./prisma
 COPY --from=builder /usr/src/app/node_modules/.prisma ./node_modules/.prisma
 
+# Set permissions for node user
+RUN chown -R node:node /usr/src/app
+
+# Switch to non-root user
+USER node
+
 EXPOSE 8080
 
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]

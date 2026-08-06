@@ -12,6 +12,12 @@ RUN npm install
 # Copy source code
 COPY . .
 
+# Set permissions for node user
+RUN chown -R node:node /app
+
+# Switch to non-root user
+USER node
+
 # Expose port 5173
 EXPOSE 5173
 

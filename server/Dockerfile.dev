@@ -10,6 +10,12 @@ RUN npm install
 
 COPY . .
 
+# Set permissions for node user
+RUN chown -R node:node /usr/src/app
+
+# Switch to non-root user
+USER node
+
 # Generate Prisma Client
 RUN npx prisma generate
 
