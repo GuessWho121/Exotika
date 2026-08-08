@@ -362,10 +362,14 @@ export const createProductReview = async (
         _count: { rating: true }
       })
 
+      const avgRating = stats._avg.rating !== null && typeof stats._avg.rating === "number" && !isNaN(stats._avg.rating)
+        ? stats._avg.rating
+        : 5.0
+
       await tx.product.update({
         where: { id },
         data: {
-          averageRating: stats._avg.rating || 5.0,
+          averageRating: avgRating,
           reviewCount: stats._count.rating || 0
         }
       })
