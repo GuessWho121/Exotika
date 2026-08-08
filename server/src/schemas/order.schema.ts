@@ -1,11 +1,12 @@
 import { z } from "zod"
 import { OrderStatus } from "@prisma/client"
+import { normalizePhoneNumber } from "../utils/phone.js"
 
 export const createOrderSchema = z.object({
   body: z.object({
     customerName: z.string().min(2, "Name must be at least 2 characters"),
     customerEmail: z.string().email("Invalid email format"),
-    customerPhone: z.string().min(10, "Phone number must be at least 10 digits"),
+    customerPhone: z.string().min(10, "Phone number must be at least 10 digits").transform((val) => normalizePhoneNumber(val)),
     shippingAddress: z.string().min(5, "Address must be at least 5 characters"),
     shippingCity: z.string().min(2, "City must be at least 2 characters"),
     shippingZipCode: z.string().min(4, "Zip code must be at least 4 characters"),
