@@ -169,6 +169,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 const syncJson = await syncRes.json()
                 const updatedItems = syncJson.data.items || []
                 
+                skipSyncRef.current = true
                 dispatch({
                   type: "INIT_CART",
                   payload: {
@@ -183,6 +184,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
               }
             } else {
               // No guest cart to merge, just initialize with DB cart
+              skipSyncRef.current = true
               dispatch({
                 type: "INIT_CART",
                 payload: {
@@ -205,9 +207,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
           if (saved) {
             const parsed = JSON.parse(saved)
             if (parsed && Array.isArray(parsed.items)) {
+              skipSyncRef.current = true
               dispatch({ type: "INIT_CART", payload: parsed })
             }
           } else {
+            skipSyncRef.current = true
             dispatch({
               type: "INIT_CART",
               payload: { items: [], total: 0, itemCount: 0 }
