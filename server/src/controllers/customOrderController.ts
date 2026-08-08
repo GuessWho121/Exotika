@@ -22,7 +22,8 @@ export const createCustomOrder = async (
       budget,
       customerName,
       customerEmail,
-      customerPhone
+      customerPhone,
+      customerState
     } = req.body
 
     const userId = req.user?.id || null
@@ -102,6 +103,7 @@ export const createCustomOrder = async (
         customerName,
         customerEmail,
         customerPhone,
+        customerState: customerState || "Unknown",
         status: CustomOrderStatus.PENDING,
         references: {
           create: referenceUrls.map((url) => ({

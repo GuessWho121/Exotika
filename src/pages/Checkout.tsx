@@ -50,6 +50,7 @@ export function Checkout() {
     addressLine1: "",
     addressLine2: "",
     city: "",
+    state: "",
     zipCode: "",
     country: "India",
   })
@@ -196,6 +197,7 @@ export function Checkout() {
           let streetAddress = ""
           let sublocality = ""
           let city = ""
+          let state = ""
           let zipCode = ""
           let country = "India"
 
@@ -209,6 +211,8 @@ export function Checkout() {
               sublocality = sublocality + (sublocality ? ", " : "") + component.long_name
             } else if (types.includes("locality") || types.includes("administrative_area_level_2")) {
               city = component.long_name
+            } else if (types.includes("administrative_area_level_1")) {
+              state = component.long_name
             } else if (types.includes("postal_code")) {
               zipCode = component.long_name
             } else if (types.includes("country")) {
@@ -222,6 +226,7 @@ export function Checkout() {
             ...prev,
             addressLine2: finalLine2,
             city: city || prev.city,
+            state: state || prev.state,
             zipCode: zipCode || prev.zipCode,
             country: country
           }))
@@ -249,6 +254,8 @@ export function Checkout() {
   // 1.8. Fetch shipping quote prior to review step (Step 3)
   useEffect(() => {
     if (activeStep === 3) {
+      const controller = new AbortController()
+
       const fetchShippingQuote = async () => {
         setIsLoadingShipping(true)
         try {
@@ -259,19 +266,24 @@ export function Checkout() {
               shippingZipCode: formData.zipCode,
               shippingCountry: formData.country,
               itemsCount: state.items.reduce((sum, item) => sum + item.quantity, 0)
-            })
+            }),
+            signal: controller.signal
           })
           const json = await res.json()
           if (res.ok && json.data) {
             setShippingQuote(json.data)
           }
-        } catch (err) {
-          console.error("Failed to fetch shipping quote:", err)
+        } catch (err: any) {
+          if (err.name !== "AbortError") {
+            console.error("Failed to fetch shipping quote:", err)
+          }
         } finally {
           setIsLoadingShipping(false)
         }
       }
       fetchShippingQuote()
+
+      return () => controller.abort()
     }
   }, [activeStep, formData.zipCode, formData.country, state.items])
 
@@ -483,6 +495,7 @@ export function Checkout() {
         customerPhone: formData.phone,
         shippingAddress: `${formData.addressLine1}${formData.addressLine2 ? " | " + formData.addressLine2 : ""}`,
         shippingCity: formData.city,
+        shippingState: formData.state,
         shippingZipCode: formData.zipCode,
         shippingCountry: formData.country,
         expectedShippingRate: shippingQuote?.rate || 0,

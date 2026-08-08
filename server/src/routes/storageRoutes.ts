@@ -3,14 +3,47 @@ import { getFileStream } from "../services/storageService.js"
 import { AppError } from "../middleware/errorMiddleware.js"
 import { logger } from "../utils/logger.js"
 import type { Readable } from "stream"
+import { optionalAuthenticate } from "../middleware/authMiddleware.js"
+import { prisma } from "../config/db.js"
 
 const router = Router()
 
-router.get("/*", async (req, res, next) => {
+router.get("/*", optionalAuthenticate as any, async (req: any, res, next) => {
   try {
     const key = decodeURIComponent(req.path.substring(1)) // Remove the leading '/'
     if (!key) {
       throw new AppError("File key is required", 400)
+    }
+
+    // Authorization check for private custom-orders reference images
+    if (key.startsWith("custom-orders/")) {
+      if (!req.user) {
+        throw new AppError("Authentication required. Please login.", 401)
+      }
+
+      const reference = await prisma.customOrderReference.findFirst({
+        where: {
+          referenceUrl: {
+            contains: key
+          }
+        },
+        include: {
+          customOrder: true
+        }
+      })
+
+      if (!reference) {
+        throw new AppError("File not found", 404)
+      }
+
+      const isAuthorized =
+        req.user.role === "ADMIN" ||
+        req.user.id === reference.customOrder.userId ||
+        req.user.email.toLowerCase() === reference.customOrder.customerEmail.toLowerCase()
+
+      if (!isAuthorized) {
+        throw new AppError("You are not authorized to view this reference image.", 403)
+      }
     }
 
     logger.info(`Streaming S3 file for key: ${key}`)

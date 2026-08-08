@@ -58,7 +58,7 @@ export const register = async (
 
     const existingUser = await prisma.user.findUnique({ where: { email } })
     if (existingUser) {
-      throw new AppError("Email is already registered", 400)
+      throw new AppError("Invalid registration details or email already taken.", 400)
     }
 
     const salt = await bcrypt.genSalt(10)
@@ -222,6 +222,17 @@ export const updateProfile = async (
 }
 
 const otpStore = new Map<string, { otp: string; expiresAt: number }>()
+
+// Sweep expired OTP entries every minute to prevent unbounded memory growth
+setInterval(() => {
+  const now = Date.now()
+  for (const [key, value] of otpStore.entries()) {
+    if (now > value.expiresAt) {
+      otpStore.delete(key)
+    }
+  }
+}, 60 * 1000)
+
 
 export const sendOtp = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {

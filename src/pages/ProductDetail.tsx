@@ -31,7 +31,20 @@ export function ProductDetail() {
   const [isSubmittingReview, setIsSubmittingReview] = useState(false)
 
   // Find original product by ID for details template
-  const product = adminState.products.find(p => p.id === id)
+  const adminProduct = adminState.products.find(p => p.id === id)
+  const product = adminProduct || (productData ? {
+    id: productData.id,
+    title: productData.title,
+    price: Number(productData.price),
+    image: productData.imageUrl,
+    description: productData.description || "",
+    category: productData.category.toLowerCase() as any,
+    inStock: productData.inStock,
+    createdAt: new Date(productData.createdAt),
+    height: productData.height || undefined,
+    width: productData.width || undefined,
+    medium: productData.medium || undefined
+  } : null)
   const isFavorite = product ? favoritesState.favoriteIds.includes(product.id) : false
 
   // Load product dynamic data and reviews on mount / route change
@@ -73,14 +86,9 @@ export function ProductDetail() {
           price: product.price,
           image: product.image,
           category: product.category as any,
+          quantity,
         },
       })
-      if (quantity > 1) {
-        dispatch({
-          type: "UPDATE_QUANTITY",
-          payload: { id: product.id, quantity },
-        })
-      }
       addNotification({
         type: "success",
         title: "Added to Cart!",

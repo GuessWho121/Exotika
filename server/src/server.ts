@@ -13,38 +13,31 @@ const startServer = async () => {
     // 2. Link orphaned guest orders to registered users if email matches
     const linkOrphanedOrders = async () => {
       try {
-        const users = await prisma.user.findMany({ select: { id: true, email: true } })
-        for (const user of users) {
-          const ordersRes = await prisma.order.updateMany({
-            where: {
-              customerEmail: { equals: user.email, mode: "insensitive" },
-              userId: null
-            },
-            data: {
-              userId: user.id
-            }
-          })
-          if (ordersRes.count > 0) {
-            logger.info(`Link ${ordersRes.count} orphaned order(s) to user: ${user.email}`)
-          }
-          const customOrdersRes = await prisma.customOrder.updateMany({
-            where: {
-              customerEmail: { equals: user.email, mode: "insensitive" },
-              userId: null
-            },
-            data: {
-              userId: user.id
-            }
-          })
-          if (customOrdersRes.count > 0) {
-            logger.info(`Link ${customOrdersRes.count} orphaned custom order(s) to user: ${user.email}`)
-          }
+        const ordersLinked = await prisma.$executeRawUnsafe(`
+          UPDATE orders
+          SET user_id = u.id
+          FROM users u
+          WHERE orders.user_id IS NULL
+            AND LOWER(orders.customer_email) = LOWER(u.email)
+        `)
+        if (ordersLinked > 0) {
+          logger.info(`Linked ${ordersLinked} orphaned orders to users via SQL`)
+        }
+
+        const customOrdersLinked = await prisma.$executeRawUnsafe(`
+          UPDATE custom_orders
+          SET user_id = u.id
+          FROM users u
+          WHERE custom_orders.user_id IS NULL
+            AND LOWER(custom_orders.customer_email) = LOWER(u.email)
+        `)
+        if (customOrdersLinked > 0) {
+          logger.info(`Linked ${customOrdersLinked} orphaned custom orders to users via SQL`)
         }
       } catch (err: any) {
         logger.error(`Error linking orphaned orders: ${err.message}`)
       }
     }
-    await linkOrphanedOrders()
 
     // 3. Check MinIO bucket availability
     await ensureBucketExists()
@@ -52,6 +45,8 @@ const startServer = async () => {
     // 3. Bind HTTP listener
     const server = app.listen(env.PORT, () => {
       logger.info(`🚀 Server running in [${env.NODE_ENV}] mode on port ${env.PORT}`)
+      // Run orphaned order linking in the background after startup completes
+      linkOrphanedOrders()
     })
 
     // 4. Graceful shutdown handler

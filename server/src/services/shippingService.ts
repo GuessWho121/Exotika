@@ -139,6 +139,7 @@ export const createShiprocketOrder = async (
   customerPhone: string,
   shippingAddress: string,
   shippingCity: string,
+  shippingState: string,
   shippingZipCode: string,
   shippingCountry: string,
   orderItems: Array<{ title: string; price: number; quantity: number }>,
@@ -160,7 +161,7 @@ export const createShiprocketOrder = async (
       billing_address: shippingAddress,
       billing_city: shippingCity,
       billing_pincode: shippingZipCode,
-      billing_state: shippingCity, // Fallback to city for state
+      billing_state: shippingState || shippingCity, // Use shippingState with city fallback
       billing_country: shippingCountry,
       billing_email: customerEmail,
       billing_phone: customerPhone,

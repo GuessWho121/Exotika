@@ -17,7 +17,8 @@ export const createCustomOrderSchema = z.object({
       .refine((val) => val >= 4000, { message: "Budget must be at least ₹4,000 INR" }),
     customerName: z.string().min(2, "Name must be at least 2 characters"),
     customerEmail: z.string().email("Invalid email format"),
-    customerPhone: z.string().min(10, "Phone number must be at least 10 digits").transform((val) => normalizePhoneNumber(val))
+    customerPhone: z.string().min(10, "Phone number must be at least 10 digits").transform((val) => normalizePhoneNumber(val)),
+    customerState: z.string().optional()
   })
 })
 

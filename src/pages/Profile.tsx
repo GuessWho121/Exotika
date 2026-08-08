@@ -460,8 +460,9 @@ export function Profile() {
 
   const removeFavorite = (productId: string, e: React.MouseEvent) => {
     e.stopPropagation()
+    // Use TOGGLE_FAVORITE so the customDispatch wrapper syncs the removal with the server
     favoritesDispatch({
-      type: "REMOVE_FAVORITE",
+      type: "TOGGLE_FAVORITE",
       payload: productId,
     })
   }

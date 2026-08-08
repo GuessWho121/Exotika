@@ -1,5 +1,6 @@
 "use client"
 
+import { memo } from 'react'
 import { Heart } from 'lucide-react'
 import { useNavigate } from "react-router-dom"
 import { useCart } from "../contexts/CartContext"
@@ -15,7 +16,7 @@ interface ProductCardProps {
   aspectRatio?: "square" | "4/3" | "3/4"
 }
 
-export function ProductCard({ id, title, price, image, description, aspectRatio = "square" }: ProductCardProps) {
+export const ProductCard = memo(function ProductCard({ id, title, price, image, description, aspectRatio = "square" }: ProductCardProps) {
   const { dispatch } = useCart()
   const { state: favoritesState, dispatch: favoritesDispatch } = useFavorites()
   const { addNotification } = useNotifications()
@@ -119,4 +120,4 @@ export function ProductCard({ id, title, price, image, description, aspectRatio 
       </div>
     </div>
   )
-}
+})
