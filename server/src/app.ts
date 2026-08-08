@@ -12,6 +12,8 @@ import customOrderRoutes from "./routes/customOrderRoutes.js"
 import cartRoutes from "./routes/cartRoutes.js"
 import storageRoutes from "./routes/storageRoutes.js"
 import { logger } from "./utils/logger.js"
+import adminRoutes from "./routes/adminRoutes.js"
+import { authenticate, requireAdmin } from "./middleware/authMiddleware.js"
 import { xssSanitizer, authLimiter, customOrderLimiter } from "./middleware/securityMiddleware.js"
 
 const app = express()
@@ -89,6 +91,7 @@ app.use("/api/orders", orderRoutes)
 app.use("/api/custom-orders", customOrderLimiter, customOrderRoutes)
 app.use("/api/cart", cartRoutes)
 app.use("/api/storage", storageRoutes)
+app.use("/api/admin", authenticate as any, requireAdmin as any, adminRoutes)
 
 // 7. Health check endpoint
 app.get("/health", (req, res) => {

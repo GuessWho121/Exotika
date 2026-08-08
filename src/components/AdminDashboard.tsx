@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Package, ShoppingCart, Palette, DollarSign, TrendingUp } from 'lucide-react'
 import { useAdmin } from "../contexts/AdminContext"
 
@@ -6,58 +6,51 @@ interface AdminDashboardProps {
   onTabChange: (tab: "dashboard" | "products" | "orders" | "transactions" | "custom-orders") => void
 }
 
+interface DashboardStats {
+  totalRevenue: number
+  pendingOrders: number
+  aov: number
+  chartData: Array<{ label: string; amount: number }>
+  categoryCounts: { [key: string]: number }
+}
+
 export function AdminDashboard({ onTabChange }: AdminDashboardProps) {
   const { state } = useAdmin()
   const [hoveredBar, setHoveredBar] = useState<number | null>(null)
   const [hoveredSegment, setHoveredSegment] = useState<number | null>(null)
+  
+  const [statsData, setStatsData] = useState<DashboardStats | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  // 1. Calculations
-  const totalRevenue = state.transactions.reduce((sum, transaction) => sum + transaction.total, 0)
-  const pendingOrders = state.transactions.filter((t) => t.status === "pending").length
-  const aov = state.transactions.length > 0 ? totalRevenue / state.transactions.length : 0
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch("/api/admin/stats")
+        if (res.ok) {
+          const json = await res.json()
+          setStatsData(json.data)
+        }
+      } catch (err) {
+        console.error("Failed to load dashboard stats", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchStats()
+  }, [])
 
-  // 2. Revenue Trend Calculation (Last 7 active days with sales, or last 7 calendar days)
-  const last7CalendarDays = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date()
-    d.setDate(d.getDate() - i)
-    return d.toISOString().split("T")[0]
-  }).reverse()
-
-  const revenueMap: { [key: string]: number } = {}
-  state.transactions.forEach(t => {
-    const dateStr = new Date(t.createdAt).toISOString().split("T")[0]
-    revenueMap[dateStr] = (revenueMap[dateStr] || 0) + t.total
-  })
-
-  const sortedDates = Object.keys(revenueMap).sort()
-  const chartData = sortedDates.length >= 3 
-    ? sortedDates.slice(-7).map(dateStr => ({
-        label: new Date(dateStr).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
-        amount: revenueMap[dateStr]
-      }))
-    : last7CalendarDays.map(dateStr => ({
-        label: new Date(dateStr).toLocaleDateString(undefined, { weekday: "short", day: "numeric" }),
-        amount: revenueMap[dateStr] || 0
-      }))
-
-  const maxAmount = Math.max(...chartData.map(d => d.amount), 1000)
-
-  // 3. Category Sales Distribution
-  const categoryCounts: { [key: string]: number } = {
-    painting: 0,
-    craft: 0,
-    "tote-bag": 0,
-    apparel: 0
+  if (loading || !statsData) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 space-y-4">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#FFDE59] border-t-transparent"></div>
+        <p className="text-sm text-[#8C7B00] font-medium">Loading analytics dashboard...</p>
+      </div>
+    )
   }
 
-  state.transactions.forEach(t => {
-    t.items.forEach(item => {
-      // Find category by matching item title or id
-      const product = state.products.find(p => p.id === item.id || p.title === item.title)
-      const cat = product?.category || "painting"
-      categoryCounts[cat] = (categoryCounts[cat] || 0) + item.quantity
-    })
-  })
+  const { totalRevenue, pendingOrders, aov, chartData, categoryCounts } = statsData
+
+  const maxAmount = Math.max(...chartData.map(d => d.amount), 1000)
 
   const totalItemsSold = Object.values(categoryCounts).reduce((a, b) => a + b, 0)
   
@@ -65,14 +58,16 @@ export function AdminDashboard({ onTabChange }: AdminDashboardProps) {
     painting: "#B39800", // Gold Dark
     craft: "#8B4513",    // Brown
     "tote-bag": "#E6C747", // Gold Light
-    apparel: "#4A3F00"     // Darkest Gold
+    apparel: "#4A3F00",    // Darkest Gold
+    unknown: "#9CA3AF"     // Gray for unknown/deleted products
   }
 
   const categoryLabels: { [key: string]: string } = {
     painting: "Paintings",
     craft: "Crafts",
     "tote-bag": "Tote Bags",
-    apparel: "Apparel"
+    apparel: "Apparel",
+    unknown: "Deleted Artworks"
   }
 
   const categoryData = Object.keys(categoryCounts).map(key => {
