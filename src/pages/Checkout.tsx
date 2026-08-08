@@ -90,6 +90,14 @@ export function Checkout() {
   
   // Track active payment state to block background actions and reloads
   const [isPaymentActive, setIsPaymentActive] = useState(false)
+
+  // Generate unique idempotency key for this checkout attempt session
+  const [idempotencyKey] = useState(() => {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) {
+      return crypto.randomUUID()
+    }
+    return Math.random().toString(36).substring(2) + Date.now().toString(36)
+  })
   
   // Shipping quote states
   const [shippingQuote, setShippingQuote] = useState<{
@@ -503,6 +511,7 @@ export function Checkout() {
         shippingZipCode: formData.zipCode,
         shippingCountry: formData.country,
         expectedShippingRate: shippingQuote?.rate || 0,
+        idempotencyKey,
         items: state.items.map((i) => ({
           productId: i.id,
           title: i.title,

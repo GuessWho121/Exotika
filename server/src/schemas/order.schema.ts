@@ -11,6 +11,7 @@ export const createOrderSchema = z.object({
     shippingZipCode: z.string().min(4, "Zip code must be at least 4 characters"),
     shippingCountry: z.string().optional(),
     expectedShippingRate: z.number().nonnegative().optional(),
+    idempotencyKey: z.string().optional(),
     items: z
       .array(
         z.object({

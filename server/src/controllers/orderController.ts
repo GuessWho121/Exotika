@@ -24,10 +24,34 @@ export const createOrder = async (
       shippingZipCode,
       shippingCountry,
       expectedShippingRate,
+      idempotencyKey,
       items
     } = req.body
 
     const userId = req.user?.id || null
+
+    // 0. Check for existing order with same idempotencyKey to prevent duplicate creation
+    if (idempotencyKey) {
+      const existingOrder = await prisma.order.findUnique({
+        where: { idempotencyKey },
+        include: { items: true }
+      })
+
+      if (existingOrder) {
+        logger.info(`[Idempotency] Duplicate order submission detected for key ${idempotencyKey}. Returning existing order.`)
+        const rzpOrder = await createRazorpayOrder(
+          existingOrder.id,
+          Number(existingOrder.totalAmount)
+        )
+        return res.status(201).json({
+          status: "success",
+          data: {
+            order: existingOrder,
+            razorpayOrder: rzpOrder
+          }
+        })
+      }
+    }
 
     // Determine the items to process based on guest vs authenticated checkout
     let itemsToProcess = items
@@ -119,6 +143,7 @@ export const createOrder = async (
           shippingZipCode,
           shippingCountry: shippingCountry || "India",
           totalAmount,
+          idempotencyKey,
           status: OrderStatus.PENDING,
           items: {
             create: orderItemsToCreate

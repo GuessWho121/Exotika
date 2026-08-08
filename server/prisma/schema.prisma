@@ -109,6 +109,7 @@ model Order {
   totalAmount     Decimal     @map("total_amount") @db.Decimal(12, 2)
   paymentId       String?     @map("payment_id")
   isPaid          Boolean     @default(false) @map("is_paid")
+  idempotencyKey  String?     @unique @map("idempotency_key")
   createdAt       DateTime    @default(now()) @map("created_at")
   updatedAt       DateTime    @updatedAt @map("updated_at")
 
