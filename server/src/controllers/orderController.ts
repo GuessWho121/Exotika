@@ -7,6 +7,7 @@ import { createRazorpayOrder, verifyRazorpaySignature } from "../services/paymen
 import { calculateShippingQuote, createShiprocketOrder } from "../services/shippingService.js"
 import { sendOrderConfirmationEmail } from "../services/emailService.js"
 import { logger } from "../utils/logger.js"
+import { enqueueJob } from "../utils/jobQueue.js"
 
 export const createOrder = async (
   req: AuthRequest,
@@ -406,38 +407,42 @@ export const verifyPayment = async (
       })
     }
 
-    // Book shipment in Shiprocket sandbox asynchronously
+    // Book shipment in Shiprocket sandbox asynchronously with retries
     const orderItems = order.items.map(item => ({
       title: item.title,
       price: Number(item.price),
       quantity: item.quantity
     }))
 
-    createShiprocketOrder(
-      order.id,
-      order.customerName,
-      order.customerEmail,
-      order.customerPhone,
-      order.shippingAddress,
-      order.shippingCity,
-      order.shippingZipCode,
-      order.shippingCountry,
-      orderItems,
-      Number(order.totalAmount)
-    ).catch(err => logger.error("Shiprocket shipment booking error:", err))
+    enqueueJob(`Book Shiprocket Order ${order.id}`, async () => {
+      await createShiprocketOrder(
+        order.id,
+        order.customerName,
+        order.customerEmail,
+        order.customerPhone,
+        order.shippingAddress,
+        order.shippingCity,
+        order.shippingZipCode,
+        order.shippingCountry,
+        orderItems,
+        Number(order.totalAmount)
+      )
+    })
 
-    // Send transaction invoice email to customer asynchronously
+    // Send transaction invoice email to customer asynchronously with retries
     const orderSubtotal = order.items.reduce((acc, item) => acc + Number(item.price) * item.quantity, 0)
     const orderShippingCost = Number(order.totalAmount) - orderSubtotal
 
-    sendOrderConfirmationEmail(
-      order.customerEmail,
-      order.customerName,
-      order.id,
-      orderItems,
-      orderShippingCost,
-      Number(order.totalAmount)
-    ).catch(err => logger.error("Order confirmation email dispatch error:", err))
+    enqueueJob(`Send Confirmation Email for Order ${order.id}`, async () => {
+      await sendOrderConfirmationEmail(
+        order.customerEmail,
+        order.customerName,
+        order.id,
+        orderItems,
+        orderShippingCost,
+        Number(order.totalAmount)
+      )
+    })
 
     res.status(200).json({
       status: "success",

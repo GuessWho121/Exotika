@@ -7,6 +7,7 @@ import { uploadFile, deleteFile } from "../services/storageService.js"
 import { sendCustomOrderConfirmationEmail } from "../services/emailService.js"
 import { scanFileBufferForViruses } from "../services/virusScannerService.js"
 import { logger } from "../utils/logger.js"
+import { enqueueJob } from "../utils/jobQueue.js"
 
 export const createCustomOrder = async (
   req: AuthRequest,
@@ -71,14 +72,19 @@ export const createCustomOrder = async (
       return false
     }
 
-    // 0. Perform binary magic headers and virus scans on all uploaded reference images
+    // 0. Perform binary magic headers and virus scans on all uploaded reference images in parallel
     if (files && files.length > 0) {
+      // Validate magic bytes synchronously first
       for (const file of files) {
         if (!isValidImageSignature(file.buffer)) {
           throw new AppError(`Invalid file signature for ${file.originalname}. Spoofed file extensions are prohibited.`, 400)
         }
-        await scanFileBufferForViruses(file.buffer, file.originalname)
       }
+
+      // Run virus scans in parallel
+      await Promise.all(
+        files.map((file) => scanFileBufferForViruses(file.buffer, file.originalname))
+      )
     }
 
     // 1. Upload files to MinIO in parallel (up to 3 files)
@@ -108,14 +114,17 @@ export const createCustomOrder = async (
       }
     })
 
-    sendCustomOrderConfirmationEmail(
-      customOrder.customerEmail,
-      customOrder.customerName,
-      customOrder.id,
-      customOrder.type,
-      Number(customOrder.budget),
-      customOrder.description
-    ).catch((err) => logger.error("Custom order email dispatch error:", err))
+    // Enqueue email confirmation dispatch job
+    enqueueJob(`Send Custom Order Confirmation Email ${customOrder.id}`, async () => {
+      await sendCustomOrderConfirmationEmail(
+        customOrder.customerEmail,
+        customOrder.customerName,
+        customOrder.id,
+        customOrder.type,
+        Number(customOrder.budget),
+        customOrder.description
+      )
+    })
 
     res.status(201).json({
       status: "success",
