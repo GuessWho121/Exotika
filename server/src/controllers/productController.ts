@@ -311,16 +311,38 @@ export const createProductReview = async (
       throw new AppError("Comment cannot be empty", 400)
     }
 
-    const product = await prisma.product.findUnique({ where: { id } })
-    if (!product) {
-      throw new AppError("Product not found", 404)
+    // 0. Verify purchase: user must have a paid order containing this product
+    const purchaseCount = await prisma.order.count({
+      where: {
+        userId,
+        isPaid: true,
+        items: {
+          some: {
+            productId: id
+          }
+        }
+      }
+    })
+
+    if (purchaseCount === 0) {
+      throw new AppError("You can only review products you have purchased.", 400)
     }
 
     const newReview = await prisma.$transaction(async (tx) => {
-      const review = await tx.review.create({
-        data: {
+      const review = await tx.review.upsert({
+        where: {
+          productId_userId: {
+            productId: id,
+            userId
+          }
+        },
+        create: {
           productId: id,
           userId,
+          rating: ratingVal,
+          comment
+        },
+        update: {
           rating: ratingVal,
           comment
         },
