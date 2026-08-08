@@ -354,11 +354,26 @@ export const addAddress = async (req: AuthRequest, res: Response, next: NextFunc
     }
 
     const { title, name, phone, address, city, zipCode, country } = req.body
+    const addressTitle = title?.trim() || "Home"
+
+    const duplicate = await prisma.userAddress.findFirst({
+      where: {
+        userId: req.user.id,
+        title: {
+          equals: addressTitle,
+          mode: "insensitive"
+        }
+      }
+    })
+
+    if (duplicate) {
+      throw new AppError(`An address with the title '${addressTitle}' already exists.`, 400)
+    }
 
     const newAddress = await prisma.userAddress.create({
       data: {
         userId: req.user.id,
-        title: title || "Home",
+        title: addressTitle,
         name,
         phone,
         address,
@@ -423,10 +438,28 @@ export const updateAddress = async (req: AuthRequest, res: Response, next: NextF
       throw new AppError("Address not found", 404)
     }
 
+    const addressTitle = title?.trim() || existingAddress.title
+    const duplicate = await prisma.userAddress.findFirst({
+      where: {
+        userId: req.user.id,
+        title: {
+          equals: addressTitle,
+          mode: "insensitive"
+        },
+        id: {
+          not: id
+        }
+      }
+    })
+
+    if (duplicate) {
+      throw new AppError(`An address with the title '${addressTitle}' already exists.`, 400)
+    }
+
     const updatedAddress = await prisma.userAddress.update({
       where: { id },
       data: {
-        title,
+        title: addressTitle,
         name,
         phone,
         address,
