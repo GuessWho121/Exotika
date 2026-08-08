@@ -275,6 +275,22 @@ export function Profile() {
     return map[countryName.toLowerCase()] || ""
   }
 
+  const getDialCode = (countryName: string): string => {
+    const map: {[key: string]: string} = {
+      "india": "+91",
+      "united states": "+1",
+      "united kingdom": "+44",
+      "canada": "+1",
+      "australia": "+61",
+      "germany": "+49",
+      "france": "+33",
+      "japan": "+81",
+      "singapore": "+65",
+      "united arab emirates": "+971"
+    }
+    return map[countryName.toLowerCase()] || ""
+  }
+
 
 
   const handleBookSuggestionSelect = (suggestion: GooglePlaceSuggestion) => {
@@ -683,12 +699,15 @@ export function Profile() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-bold text-[#4A3F00] mb-1">Phone Number</label>
+                        <label className="block text-xs font-bold text-[#4A3F00] mb-1">
+                          Phone Number {getDialCode(addressForm.country) ? `(${getDialCode(addressForm.country)})` : ""}
+                        </label>
                         <input
                           type="text"
                           value={addressForm.phone}
                           onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value })}
                           required
+                          placeholder={getDialCode(addressForm.country) ? `e.g. ${getDialCode(addressForm.country)} 9876543210` : "e.g. +91 9876543210"}
                           className="w-full rounded-lg border border-[#E6C747] bg-[#FFFBEB] px-3 py-2 text-sm text-[#4A3F00] outline-none"
                         />
                       </div>
