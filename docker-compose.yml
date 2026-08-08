@@ -50,6 +50,8 @@ services:
       - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
       - AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME:-exotika-bucket}
       - S3_FORCE_PATH_STYLE=true
+      - RAZORPAY_SANDBOX=false
+      - SHIPROCKET_SANDBOX=false
     depends_on:
       - exotika-db
       - exotika-minio

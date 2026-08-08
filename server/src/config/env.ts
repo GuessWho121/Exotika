@@ -21,8 +21,16 @@ const envSchema = z.object({
     .default("true"),
   RAZORPAY_KEY_ID: z.string().optional(),
   RAZORPAY_KEY_SECRET: z.string().optional(),
+  RAZORPAY_SANDBOX: z
+    .string()
+    .transform((val) => val === "true")
+    .default("true"),
   SHIPROCKET_EMAIL: z.string().optional(),
   SHIPROCKET_PASSWORD: z.string().optional(),
+  SHIPROCKET_SANDBOX: z
+    .string()
+    .transform((val) => val === "true")
+    .default("true"),
   SHIPROCKET_PICKUP_POSTCODE: z.string().optional(),
   SHIPROCKET_PICKUP_LOCATION_NAME: z.string().optional(),
   SMTP_HOST: z.string().optional(),
@@ -33,13 +41,20 @@ const envSchema = z.object({
 }).refine(
   (data) => {
     if (data.NODE_ENV === "production") {
-      return !!data.RAZORPAY_KEY_ID && !!data.RAZORPAY_KEY_SECRET
+      return (
+        !!data.RAZORPAY_KEY_ID &&
+        !!data.RAZORPAY_KEY_SECRET &&
+        !!data.SHIPROCKET_EMAIL &&
+        !!data.SHIPROCKET_PASSWORD &&
+        data.RAZORPAY_SANDBOX === false &&
+        data.SHIPROCKET_SANDBOX === false
+      )
     }
     return true
   },
   {
-    message: "RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET are required in production mode",
-    path: ["RAZORPAY_KEY_SECRET"]
+    message: "Production mode requires valid RAZORPAY and SHIPROCKET credentials, and sandbox settings must be disabled (false).",
+    path: ["NODE_ENV"]
   }
 )
 

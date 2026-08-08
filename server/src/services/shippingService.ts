@@ -16,8 +16,11 @@ export const getShiprocketToken = async (): Promise<string | null> => {
   const email = env.SHIPROCKET_EMAIL
   const password = env.SHIPROCKET_PASSWORD
 
-  if (!email || !password) {
-    logger.warn("⚠️ Shiprocket credentials (SHIPROCKET_EMAIL / SHIPROCKET_PASSWORD) are not configured. Falling back to default shipping rates.")
+  if (env.SHIPROCKET_SANDBOX || !email || !password) {
+    if (env.NODE_ENV === "production") {
+      throw new Error("Shiprocket credentials (SHIPROCKET_EMAIL / SHIPROCKET_PASSWORD) are missing or sandbox is enabled on the production server.")
+    }
+    logger.warn("⚠️ Shiprocket is running in simulated Sandbox Mode.")
     return null
   }
 

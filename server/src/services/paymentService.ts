@@ -29,12 +29,12 @@ export const createRazorpayOrder = async (
   const keyId = env.RAZORPAY_KEY_ID
   const keySecret = env.RAZORPAY_KEY_SECRET
 
-  // Fallback to simulated payment parameters if keys are unconfigured
-  if (!keyId || !keySecret) {
+  // Fallback to simulated payment parameters if sandbox mode is enabled or keys are missing
+  if (env.RAZORPAY_SANDBOX || !keyId || !keySecret) {
     if (env.NODE_ENV === "production") {
-      throw new Error("Razorpay credentials (RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET) are missing on the production server.")
+      throw new Error("Razorpay credentials (RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET) are missing or sandbox is enabled on the production server.")
     }
-    logger.warn("⚠️ Razorpay credentials (RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET) are missing. Running in simulated Sandbox Mode.")
+    logger.warn("⚠️ Razorpay is running in simulated Sandbox Mode.")
     return {
       id: `rzp_mock_${orderId}_${Date.now()}`,
       amount: Math.round(amount * 100),
@@ -95,7 +95,7 @@ export const verifyRazorpaySignature = (
   const keySecret = env.RAZORPAY_KEY_SECRET
 
   // Handle mock signatures in sandbox environment only when NOT in production
-  if (env.NODE_ENV !== "production" && (razorpayOrderId.startsWith("rzp_mock_") || !keySecret)) {
+  if (env.NODE_ENV !== "production" && (env.RAZORPAY_SANDBOX || razorpayOrderId.startsWith("rzp_mock_") || !keySecret)) {
     const expectedMockSig = `sig_${razorpayOrderId}_${razorpayPaymentId}`
     const isMockValid = razorpaySignature === expectedMockSig
     logger.info(`[SANDBOX] Verifying simulated payment signature. Valid: ${isMockValid}`)
