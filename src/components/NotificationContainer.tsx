@@ -9,16 +9,16 @@ export function NotificationContainer() {
 
   useEffect(() => {
     // Auto-remove notifications after their duration
-    state.notifications.forEach((notification: Notification) => {
-      if (notification.duration !== 0) { // 0 means persistent
+    const timers = state.notifications
+      .filter((notification: Notification) => notification.duration !== 0)
+      .map((notification: Notification) => {
         const duration = notification.duration || 5000
-        const timer = setTimeout(() => {
+        return setTimeout(() => {
           removeNotification(notification.id)
         }, duration)
+      })
 
-        return () => clearTimeout(timer)
-      }
-    })
+    return () => timers.forEach(clearTimeout)
   }, [state.notifications, removeNotification])
 
   const getIcon = (type: string) => {
