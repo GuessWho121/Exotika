@@ -427,7 +427,7 @@ export function Checkout() {
           const otpJson = await otpRes.json()
 
           if (otpRes.ok) {
-            if (otpJson.data && otpJson.data.otp) {
+            if (otpJson.data && otpJson.data.otp && (import.meta as any).env.DEV) {
               setSentOtp(otpJson.data.otp)
               addNotification({
                 type: "info",
@@ -1178,7 +1178,7 @@ export function Checkout() {
             </p>
 
             {/* Developer help notice */}
-            {sentOtp && (
+            {sentOtp && (import.meta as any).env.DEV && (
               <div className="mt-2 rounded bg-amber-50 border border-amber-200 p-2 text-center text-xs text-[#8C7B00]">
                 🔑 <strong>[DEV MODE] Verification OTP is:</strong> <span className="font-mono text-base font-bold text-amber-800 select-all">{sentOtp}</span>
               </div>

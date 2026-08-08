@@ -160,6 +160,8 @@ export function SearchPage() {
                     image={product.imageUrl}
                     description={product.description}
                     aspectRatio="square"
+                    category={product.category?.toLowerCase() as any}
+                    inStock={product.inStock}
                   />
                 ))}
               </div>

@@ -656,6 +656,8 @@ export function ProductDetail() {
                 image={relatedProduct.image}
                 description={relatedProduct.description}
                 aspectRatio="square"
+                category={relatedProduct.category}
+                inStock={relatedProduct.inStock}
               />
             ))}
           </div>

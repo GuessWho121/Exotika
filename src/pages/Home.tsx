@@ -76,6 +76,8 @@ export function Home() {
               image={artwork.image}
               description={artwork.description}
               aspectRatio="4/3"
+              category={artwork.category}
+              inStock={artwork.inStock}
             />
           ))}
         </div>
@@ -104,6 +106,8 @@ export function Home() {
               image={craft.image}
               description={craft.description}
               aspectRatio="square"
+              category={craft.category}
+              inStock={craft.inStock}
             />
           ))}
         </div>
@@ -132,6 +136,8 @@ export function Home() {
               image={bag.image}
               description={bag.description}
               aspectRatio="3/4"
+              category={bag.category}
+              inStock={bag.inStock}
             />
           ))}
         </div>

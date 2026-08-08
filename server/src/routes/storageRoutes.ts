@@ -10,9 +10,14 @@ const router = Router()
 
 router.get("/*", optionalAuthenticate as any, async (req: any, res, next) => {
   try {
-    const key = decodeURIComponent(req.path.substring(1)) // Remove the leading '/'
+    const key = req.path.substring(1) // Remove the leading '/'
     if (!key) {
       throw new AppError("File key is required", 400)
+    }
+
+    // Path traversal protection
+    if (key.includes("..") || key.includes("\\")) {
+      throw new AppError("Invalid file key", 400)
     }
 
     // Authorization check for private custom-orders reference images
@@ -23,9 +28,7 @@ router.get("/*", optionalAuthenticate as any, async (req: any, res, next) => {
 
       const reference = await prisma.customOrderReference.findFirst({
         where: {
-          referenceUrl: {
-            contains: key
-          }
+          referenceUrl: `/api/storage/${key}`
         },
         include: {
           customOrder: true

@@ -73,7 +73,7 @@ export const register = async (
         address,
         city,
         zipCode,
-        phoneVerified: phone ? true : false
+        phoneVerified: false
       }
     })
 
@@ -244,7 +244,11 @@ export const sendOtp = async (req: AuthRequest, res: Response, next: NextFunctio
 
     otpStore.set(contact, { otp, expiresAt })
 
-    logger.info(`[OTP Service] Generated OTP ${otp} for ${contact}`)
+    if (env.NODE_ENV === "development") {
+      logger.info(`[OTP Service] Generated OTP ${otp} for ${contact}`)
+    } else {
+      logger.info(`[OTP Service] Generated OTP for ${contact}`)
+    }
 
     res.status(200).json({
       status: "success",

@@ -14,9 +14,11 @@ interface ProductCardProps {
   image: string
   description?: string
   aspectRatio?: "square" | "4/3" | "3/4"
+  category?: "painting" | "craft" | "tote-bag" | "apparel"
+  inStock?: boolean
 }
 
-export const ProductCard = memo(function ProductCard({ id, title, price, image, description, aspectRatio = "square" }: ProductCardProps) {
+export const ProductCard = memo(function ProductCard({ id, title, price, image, description, aspectRatio = "square", category, inStock = true }: ProductCardProps) {
   const { dispatch } = useCart()
   const { state: favoritesState, dispatch: favoritesDispatch } = useFavorites()
   const { addNotification } = useNotifications()
@@ -35,6 +37,8 @@ export const ProductCard = memo(function ProductCard({ id, title, price, image, 
   const addToCart = (e: React.MouseEvent) => {
     e.stopPropagation() // Prevent navigation when clicking add to cart
     
+    if (!inStock) return
+
     const numericPrice = Number.parseFloat(price.replace("₹", ""))
 
     dispatch({
@@ -44,7 +48,7 @@ export const ProductCard = memo(function ProductCard({ id, title, price, image, 
         title,
         price: numericPrice,
         image,
-        category: "painting" as const,
+        category: category || "painting",
       },
     })
 
@@ -113,9 +117,14 @@ export const ProductCard = memo(function ProductCard({ id, title, price, image, 
 
         <button
           onClick={addToCart}
-          className="mt-4 flex w-full items-center justify-center rounded-md bg-[#FFDE59] px-4 py-2.5 text-sm font-bold text-[#4A3F00] transition-opacity hover:opacity-90"
+          disabled={!inStock}
+          className={`mt-4 flex w-full items-center justify-center rounded-md px-4 py-2.5 text-sm font-bold transition-opacity hover:opacity-90 ${
+            !inStock
+              ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+              : "bg-[#FFDE59] text-[#4A3F00]"
+          }`}
         >
-          Add to Cart
+          {!inStock ? "Out of Stock" : "Add to Cart"}
         </button>
       </div>
     </div>
