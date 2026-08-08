@@ -166,6 +166,16 @@ export function Profile() {
       return
     }
 
+    if (addressForm.address.trim().length < 5) {
+      alert("Address must be at least 5 characters long.")
+      return
+    }
+
+    if (addressForm.city.trim().length < 2) {
+      alert("City must be at least 2 characters long.")
+      return
+    }
+
     try {
       const url = editingAddressId 
         ? `/api/auth/addresses/${editingAddressId}` 
