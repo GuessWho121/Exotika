@@ -11,6 +11,7 @@ import { Textarea } from "../components/ui/textarea"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select"
 import Stepper, { Step } from "../components/Stepper"
+import { validatePhone } from "../lib/validation"
 
 export function CustomOrder() {
   const { addNotification } = useNotifications()
@@ -132,7 +133,7 @@ export function CustomOrder() {
   const isStep3Valid =
     formData.name.trim().length >= 2 &&
     /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email) &&
-    /^\+?[0-9\s\-()]{7,20}$/.test(formData.phone);
+    validatePhone(formData.phone);
 
   const getNextButtonProps = () => {
     if (activeStep === 1) {

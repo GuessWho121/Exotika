@@ -6,6 +6,7 @@ import { Eye, EyeOff, Mail, Lock, User, Phone, X } from 'lucide-react'
 import { useNotifications } from "../contexts/NotificationContext"
 import { GoogleLogin } from "@react-oauth/google"
 import { Logo } from "../components/Logo"
+import { validatePhone } from "../lib/validation"
 
 export function Signup() {
   const navigate = useNavigate()
@@ -88,12 +89,12 @@ export function Signup() {
     }
 
     // Phone validation (Optional at registration)
-    if (formData.phone && !/^\+?[0-9\s\-()]{7,20}$/.test(formData.phone)) {
+    if (formData.phone && !validatePhone(formData.phone)) {
       errors.phone = true
       addNotification({
         type: "error",
         title: "Invalid Phone Number",
-        message: "Please enter a valid phone number (7 to 20 digits, e.g. +1 555 12345).",
+        message: "Please enter a valid phone number (at least 10 digits).",
         duration: 4000,
       })
       isValid = false

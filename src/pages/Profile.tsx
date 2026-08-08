@@ -6,6 +6,7 @@ import { useNavigate, useLocation } from "react-router-dom"
 import { useAdmin } from "../contexts/AdminContext"
 import { useFavorites } from "../contexts/FavoritesContext"
 import type { UserAddressResponse, GooglePlaceSuggestion } from "../types/api"
+import { validatePhone } from "../lib/validation"
 
 interface UserProfile {
   id: string
@@ -154,9 +155,8 @@ export function Profile() {
       return
     }
 
-    const phoneDigits = addressForm.phone.replace(/\D/g, "")
-    if (phoneDigits.length < 10) {
-      alert("Phone number must be at least 10 digits long.")
+    if (!validatePhone(addressForm.phone)) {
+      alert("Please enter a valid phone number (at least 10 digits).")
       return
     }
 
@@ -430,12 +430,9 @@ export function Profile() {
       return
     }
 
-    if (editForm.phone) {
-      const digitCount = editForm.phone.replace(/\D/g, "").length
-      if (digitCount > 0 && digitCount < 10) {
-        alert("Phone number must be at least 10 digits long.")
-        return
-      }
+    if (editForm.phone && !validatePhone(editForm.phone)) {
+      alert("Please enter a valid phone number (at least 10 digits).")
+      return
     }
 
     try {

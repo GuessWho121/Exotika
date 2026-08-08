@@ -12,6 +12,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "../co
 import { X, MapPin } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select"
 import Stepper, { Step } from "../components/Stepper"
+import { validatePhone } from "../lib/validation"
 
 declare global {
   interface Window {
@@ -116,7 +117,7 @@ export function Checkout() {
   const isStep1Valid =
     formData.name.trim().length >= 2 &&
     /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email) &&
-    /^\+?[0-9\s\-()]{7,20}$/.test(formData.phone);
+    validatePhone(formData.phone);
 
   const isStep2Valid =
     (selectedAddressId !== "" && selectedAddressId !== "new") || (
