@@ -220,7 +220,7 @@ export function Profile() {
       zipCode: addr.zipCode,
       country: addr.country || "India"
     })
-    setIsBookAddressVerified(true)
+    setIsBookAddressVerified(false)
     setIsAddressFormOpen(true)
   }
 
