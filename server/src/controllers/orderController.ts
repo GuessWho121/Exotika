@@ -420,6 +420,13 @@ export const verifyPayment = async (
       data: {
         isPaid: true,
         paymentId: razorpayPaymentId
+      },
+      include: {
+        items: {
+          include: {
+            product: true
+          }
+        }
       }
     })
 
