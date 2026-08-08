@@ -80,6 +80,10 @@ export const createOrder = async (
 
     // Validate shipping rate consistency to prevent user charge mismatch
     if (expectedShippingRate !== undefined && Math.abs(shippingCost - expectedShippingRate) > 0.01) {
+      logger.warn(
+        `[Shipping Mismatch] Expected rate ₹${expectedShippingRate} from client does not match calculated rate ₹${shippingCost}. ` +
+        `Postcode: ${shippingZipCode}, Country: ${shippingCountry || "India"}, Weight: ${itemsToProcess.length * 0.5}kg`
+      )
       throw new AppError(`Shipping rate has changed. Expected ₹${expectedShippingRate}, but current rate is ₹${shippingCost}. Please reload checkout and review.`, 400)
     }
 
