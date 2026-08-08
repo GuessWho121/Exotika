@@ -1,12 +1,20 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Eye, Palette, ImageIcon, Download, X, Mail, Phone, MessageCircle } from 'lucide-react'
 import { useAdmin, type CustomOrder } from "../contexts/AdminContext"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 
 export function AdminCustomOrders() {
   const { state, refreshCustomOrders } = useAdmin()
+
+  useEffect(() => {
+    refreshCustomOrders()
+    const interval = setInterval(() => {
+      refreshCustomOrders()
+    }, 30000)
+    return () => clearInterval(interval)
+  }, [refreshCustomOrders])
   const [selectedOrder, setSelectedOrder] = useState<CustomOrder | null>(null)
   const [zoomedImage, setZoomedImage] = useState<string | null>(null)
   const [isZipping, setIsZipping] = useState(false)

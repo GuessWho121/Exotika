@@ -1,9 +1,17 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Search, ShoppingBag, Truck } from 'lucide-react'
 import { useAdmin, type Transaction } from "../contexts/AdminContext"
 
 export function AdminOrders() {
   const { state, refreshTransactions } = useAdmin()
+
+  useEffect(() => {
+    refreshTransactions()
+    const interval = setInterval(() => {
+      refreshTransactions()
+    }, 30000)
+    return () => clearInterval(interval)
+  }, [refreshTransactions])
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "processing" | "shipped" | "delivered">("all")
   
