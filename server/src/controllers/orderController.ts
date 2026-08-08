@@ -92,10 +92,15 @@ export const createOrder = async (
       let totalAmount = shippingCost // Start with shipping cost
       const orderItemsToCreate = []
 
+      // Batch query products to avoid N+1 query overhead inside transaction
+      const productIds = itemsToProcess.map((i: any) => i.productId)
+      const products = await tx.product.findMany({
+        where: { id: { in: productIds } }
+      })
+      const productMap = new Map(products.map(p => [p.id, p]))
+
       for (const item of itemsToProcess) {
-        const product = await tx.product.findUnique({
-          where: { id: item.productId }
-        })
+        const product = productMap.get(item.productId)
 
         if (!product) {
           throw new AppError(`Product with ID ${item.productId} not found`, 404)
