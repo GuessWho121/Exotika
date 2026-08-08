@@ -5,7 +5,11 @@ export const createCustomOrderSchema = z.object({
   body: z.object({
     type: z.string().min(2, "Type is required"),
     description: z.string().min(20, "Description must be at least 20 characters").max(1000, "Description cannot exceed 1000 characters"),
-    size: z.string().optional(),
+    size: z
+      .string()
+      .max(50, "Size description cannot exceed 50 characters")
+      .regex(/^[a-zA-Z0-9\s"'.xX-]*$/, "Size contains invalid characters")
+      .optional(),
     budget: z
       .string()
       .transform((val) => parseFloat(val))
