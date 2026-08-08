@@ -145,6 +145,7 @@ export function Home() {
             <img
               src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/artist-picture-kdML3OZTrU1u1XG8SYK0KBPJIApFIX.webp"
               alt="Sarah - Artist and Creator"
+              loading="lazy"
               className="h-full w-full object-cover"
             />
           </div>

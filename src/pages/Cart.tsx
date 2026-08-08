@@ -49,6 +49,7 @@ export function Cart() {
                 <img
                   src={item.image || "/placeholder.svg"}
                   alt={item.title}
+                  loading="lazy"
                   className="h-24 w-24 rounded-lg object-cover"
                 />
                 <div className="flex-1">

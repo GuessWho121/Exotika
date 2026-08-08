@@ -85,9 +85,11 @@ export function ProductCard({ id, title, price, image, description, aspectRatio 
       onClick={handleCardClick}
     >
       <div className="relative overflow-hidden">
-        <div
-          className={`w-full bg-cover bg-center bg-no-repeat transition-transform duration-300 group-hover:scale-105 ${aspectClasses[aspectRatio]}`}
-          style={{ backgroundImage: `url("${image}")` }}
+        <img
+          src={image}
+          alt={title}
+          loading="lazy"
+          className={`w-full object-cover transition-transform duration-300 group-hover:scale-105 ${aspectClasses[aspectRatio]}`}
         />
         <button 
           onClick={toggleFavorite}

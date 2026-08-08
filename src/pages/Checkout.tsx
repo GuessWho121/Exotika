@@ -1133,6 +1133,7 @@ export function Checkout() {
                     <img
                       src={item.image || "/placeholder.svg"}
                       alt={item.title}
+                      loading="lazy"
                       className="h-16 w-16 rounded-lg object-cover"
                     />
                     <div className="flex-1">
