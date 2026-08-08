@@ -148,6 +148,24 @@ export function Profile() {
 
   const handleAddressSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (addressForm.name.trim().length < 2) {
+      alert("Name must be at least 2 characters long.")
+      return
+    }
+
+    const phoneDigits = addressForm.phone.replace(/\D/g, "")
+    if (phoneDigits.length < 10) {
+      alert("Phone number must be at least 10 digits long.")
+      return
+    }
+
+    const zipDigits = addressForm.zipCode.trim()
+    if (zipDigits.length < 3 || zipDigits.length > 10 || !/^[a-zA-Z0-9\s-]*$/.test(zipDigits)) {
+      alert("ZIP code must be between 3 and 10 alphanumeric characters (spaces/hyphens allowed).")
+      return
+    }
+
     try {
       const url = editingAddressId 
         ? `/api/auth/addresses/${editingAddressId}` 

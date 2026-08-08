@@ -53,10 +53,17 @@ export const createAddressSchema = z.object({
   body: z.object({
     title: z.string().optional(),
     name: z.string().min(2, "Name must be at least 2 characters"),
-    phone: z.string().min(7, "Phone number is invalid").transform((val) => normalizePhoneNumber(val)),
+    phone: z
+      .string()
+      .refine((val) => val.replace(/\D/g, "").length >= 10, { message: "Phone number must be at least 10 digits" })
+      .transform((val) => normalizePhoneNumber(val)),
     address: z.string().min(5, "Address must be at least 5 characters"),
     city: z.string().min(2, "City must be at least 2 characters"),
-    zipCode: z.string().min(3, "ZIP Code is invalid"),
+    zipCode: z
+      .string()
+      .min(3, "ZIP Code must be at least 3 characters")
+      .max(10, "ZIP Code cannot exceed 10 characters")
+      .regex(/^[a-zA-Z0-9\s-]*$/, "ZIP Code contains invalid characters"),
     country: z.string().optional()
   })
 })
