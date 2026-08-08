@@ -583,8 +583,8 @@ export function Profile() {
                     <input
                       type="email"
                       value={editForm.email}
-                      onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                      className="mt-1 block w-full rounded-lg border border-[#FFF5CC] bg-[#FFFBEB] px-3 py-2 text-[#4A3F00] focus:border-[#FFDE59] focus:outline-none focus:ring-2 focus:ring-[#FFDE59]"
+                      disabled
+                      className="mt-1 block w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-gray-500 cursor-not-allowed focus:outline-none"
                     />
                   ) : (
                     <div className="mt-1 flex items-center gap-2 text-[#8C7B00]">
