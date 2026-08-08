@@ -109,23 +109,10 @@ export const getProductById = async (
       throw new AppError("Product not found", 404)
     }
 
-    const reviewsData = await prisma.review.aggregate({
-      where: { productId: id },
-      _avg: { rating: true },
-      _count: { rating: true }
-    })
-
-    const averageRating = reviewsData._avg.rating || 5
-    const reviewCount = reviewsData._count.rating || 0
-
     res.status(200).json({
       status: "success",
       data: {
-        product: {
-          ...product,
-          averageRating,
-          reviewCount
-        }
+        product
       }
     })
   } catch (error) {
@@ -351,20 +338,39 @@ export const createProductReview = async (
       throw new AppError("Product not found", 404)
     }
 
-    const newReview = await prisma.review.create({
-      data: {
-        productId: id,
-        userId,
-        rating: ratingVal,
-        comment
-      },
-      include: {
-        user: {
-          select: {
-            name: true
+    const newReview = await prisma.$transaction(async (tx) => {
+      const review = await tx.review.create({
+        data: {
+          productId: id,
+          userId,
+          rating: ratingVal,
+          comment
+        },
+        include: {
+          user: {
+            select: {
+              name: true
+            }
           }
         }
-      }
+      })
+
+      // Aggregate new average rating and review count database-side
+      const stats = await tx.review.aggregate({
+        where: { productId: id },
+        _avg: { rating: true },
+        _count: { rating: true }
+      })
+
+      await tx.product.update({
+        where: { id },
+        data: {
+          averageRating: stats._avg.rating || 5.0,
+          reviewCount: stats._count.rating || 0
+        }
+      })
+
+      return review
     })
 
     res.status(201).json({

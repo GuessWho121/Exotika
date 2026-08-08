@@ -69,6 +69,8 @@ model Product {
   height      String?
   width       String?
   medium      String?
+  averageRating Float       @default(5.0) @map("average_rating")
+  reviewCount   Int         @default(0) @map("review_count")
   createdAt   DateTime    @default(now()) @map("created_at")
   updatedAt   DateTime    @updatedAt @map("updated_at")
   
