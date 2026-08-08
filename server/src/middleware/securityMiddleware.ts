@@ -56,3 +56,21 @@ export const customOrderLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false
 })
+
+// 4. Rate Limiter for Order creation and payment verification (Spam prevention)
+export const orderLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 30, // Max 30 order requests per window
+  message: "Too many order creation or payment requests from this IP. Please try again after 15 minutes.",
+  standardHeaders: true,
+  legacyHeaders: false
+})
+
+// 5. Rate Limiter for Review posting (Spam prevention)
+export const reviewLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 15, // Max 15 review submissions per window
+  message: "Too many review submissions from this IP. Please try again after 15 minutes.",
+  standardHeaders: true,
+  legacyHeaders: false
+})

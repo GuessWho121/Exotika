@@ -16,6 +16,7 @@ import {
 } from "../schemas/product.schema.js"
 import { authenticate, requireAdmin } from "../middleware/authMiddleware.js"
 import { validateRequest } from "../middleware/validateMiddleware.js"
+import { reviewLimiter } from "../middleware/securityMiddleware.js"
 
 const router = Router()
 
@@ -28,7 +29,7 @@ router.post("/:id/favorite", authenticate as any, toggleProductFavorite as any)
 
 // Product Reviews
 router.get("/:id/reviews", getProductReviews)
-router.post("/:id/reviews", authenticate as any, createProductReview as any)
+router.post("/:id/reviews", authenticate as any, reviewLimiter, createProductReview as any)
 
 // Protected Admin Routes
 router.post(
