@@ -380,6 +380,20 @@ export function Profile() {
 
   const handleSave = async () => {
     if (!editForm) return
+
+    if (editForm.name.trim().length < 2) {
+      alert("Name must be at least 2 characters long.")
+      return
+    }
+
+    if (editForm.phone) {
+      const digitCount = editForm.phone.replace(/\D/g, "").length
+      if (digitCount > 0 && digitCount < 10) {
+        alert("Phone number must be at least 10 digits long.")
+        return
+      }
+    }
+
     try {
       const res = await fetch("/api/auth/profile", {
         method: "PUT",
