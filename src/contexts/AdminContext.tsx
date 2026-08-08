@@ -4,6 +4,7 @@ import type React from "react"
 import { createContext, useContext, useReducer, useEffect, type ReactNode, useCallback } from "react"
 import { useNotifications } from "./NotificationContext"
 import type { ProductResponse, OrderResponse, OrderItemResponse, CustomOrderResponse } from "../types/api"
+import { api, APIError } from "../lib/api"
 
 export interface Product {
   id: string
@@ -130,26 +131,21 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   // 1. Fetch catalog products
   const refreshProducts = useCallback(async () => {
     try {
-      const res = await fetch("/api/products")
-      if (res.ok) {
-        const json = await res.json()
-        const formatted: Product[] = json.data.products.map((p: ProductResponse) => ({
-          id: p.id,
-          title: p.title,
-          price: Number(p.price),
-          image: p.imageUrl,
-          description: p.description || "",
-          category: p.category.toLowerCase() as any,
-          inStock: p.inStock,
-          createdAt: new Date(p.createdAt),
-          height: p.height || undefined,
-          width: p.width || undefined,
-          medium: p.medium || undefined
-        }))
-        dispatch({ type: "SET_PRODUCTS", payload: formatted })
-      } else {
-        addNotification({ type: "error", title: "Error", message: "Failed to load product catalog." })
-      }
+      const json = await api.get("/api/products")
+      const formatted: Product[] = json.data.products.map((p: ProductResponse) => ({
+        id: p.id,
+        title: p.title,
+        price: Number(p.price),
+        image: p.imageUrl,
+        description: p.description || "",
+        category: p.category.toLowerCase() as any,
+        inStock: p.inStock,
+        createdAt: new Date(p.createdAt),
+        height: p.height || undefined,
+        width: p.width || undefined,
+        medium: p.medium || undefined
+      }))
+      dispatch({ type: "SET_PRODUCTS", payload: formatted })
     } catch (err) {
       console.error("Failed to fetch products:", err)
       addNotification({ type: "error", title: "Network Error", message: "Failed to load product catalog." })
@@ -159,33 +155,28 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   // 2. Fetch standard transactions (Admin only API)
   const refreshTransactions = useCallback(async () => {
     try {
-      const res = await fetch("/api/orders")
-      if (res.ok) {
-        const json = await res.json()
-        const formatted: Transaction[] = json.data.orders.map((o: OrderResponse) => ({
-          id: o.id,
-          total: Number(o.totalAmount),
-          status: o.status.toLowerCase() as any,
-          createdAt: new Date(o.createdAt),
-          paymentId: o.paymentId || null,
-          isPaid: o.isPaid || false,
-          customerInfo: {
-            name: o.customerName,
-            email: o.customerEmail,
-            phone: o.customerPhone,
-            address: `${o.shippingAddress}, ${o.shippingCity} - ${o.shippingZipCode}`
-          },
-          items: (o.items || []).map((i: OrderItemResponse) => ({
-            id: i.productId || "",
-            title: i.title,
-            price: Number(i.price),
-            quantity: i.quantity
-          }))
+      const json = await api.get("/api/orders")
+      const formatted: Transaction[] = json.data.orders.map((o: OrderResponse) => ({
+        id: o.id,
+        total: Number(o.totalAmount),
+        status: o.status.toLowerCase() as any,
+        createdAt: new Date(o.createdAt),
+        paymentId: o.paymentId || null,
+        isPaid: o.isPaid || false,
+        customerInfo: {
+          name: o.customerName,
+          email: o.customerEmail,
+          phone: o.customerPhone,
+          address: `${o.shippingAddress}, ${o.shippingCity} - ${o.shippingZipCode}`
+        },
+        items: (o.items || []).map((i: OrderItemResponse) => ({
+          id: i.productId || "",
+          title: i.title,
+          price: Number(i.price),
+          quantity: i.quantity
         }))
-        dispatch({ type: "SET_TRANSACTIONS", payload: formatted })
-      } else {
-        addNotification({ type: "error", title: "Error", message: "Failed to load transactions." })
-      }
+      }))
+      dispatch({ type: "SET_TRANSACTIONS", payload: formatted })
     } catch (err) {
       console.error("Failed to fetch transactions:", err)
       addNotification({ type: "error", title: "Network Error", message: "Failed to load transactions." })
@@ -195,28 +186,23 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   // 3. Fetch custom orders (comissions requests)
   const refreshCustomOrders = useCallback(async () => {
     try {
-      const res = await fetch("/api/custom-orders")
-      if (res.ok) {
-        const json = await res.json()
-        const formatted: CustomOrder[] = json.data.customOrders.map((c: CustomOrderResponse) => ({
-          id: c.id,
-          type: c.type.toLowerCase() as any,
-          description: c.description,
-          size: c.size || "",
-          budget: Number(c.budget),
-          status: c.status.toLowerCase() as any,
-          createdAt: new Date(c.createdAt),
-          customerInfo: {
-            name: c.customerName,
-            email: c.customerEmail,
-            phone: c.customerPhone
-          },
-          referenceImages: (c.references || []).map((r: { referenceUrl: string }) => r.referenceUrl)
-        }))
-        dispatch({ type: "SET_CUSTOM_ORDERS", payload: formatted })
-      } else {
-        addNotification({ type: "error", title: "Error", message: "Failed to load custom orders." })
-      }
+      const json = await api.get("/api/custom-orders")
+      const formatted: CustomOrder[] = json.data.customOrders.map((c: CustomOrderResponse) => ({
+        id: c.id,
+        type: c.type.toLowerCase() as any,
+        description: c.description,
+        size: c.size || "",
+        budget: Number(c.budget),
+        status: c.status.toLowerCase() as any,
+        createdAt: new Date(c.createdAt),
+        customerInfo: {
+          name: c.customerName,
+          email: c.customerEmail,
+          phone: c.customerPhone
+        },
+        referenceImages: (c.references || []).map((r: { referenceUrl: string }) => r.referenceUrl)
+      }))
+      dispatch({ type: "SET_CUSTOM_ORDERS", payload: formatted })
     } catch (err) {
       console.error("Failed to fetch custom orders:", err)
       addNotification({ type: "error", title: "Network Error", message: "Failed to load custom orders." })
@@ -227,21 +213,17 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const fetchSession = useCallback(async (): Promise<User | null> => {
     dispatch({ type: "SET_LOADING", payload: true })
     try {
-      const res = await fetch("/api/auth/me")
-      if (res.ok) {
-        const json = await res.json()
-        const user: User = json.data.user
-        dispatch({ type: "SET_USER", payload: user })
-        dispatch({ type: "SET_LOADING", payload: false })
-        return user
-      } else if (res.status === 401) {
+      const json = await api.get("/api/auth/me")
+      const user: User = json.data.user
+      dispatch({ type: "SET_USER", payload: user })
+      dispatch({ type: "SET_LOADING", payload: false })
+      return user
+    } catch (err) {
+      if (err instanceof APIError && err.status === 401) {
         dispatch({ type: "SET_USER", payload: null })
         dispatch({ type: "SET_LOADING", payload: false })
         return null
-      } else {
-        addNotification({ type: "error", title: "Session Error", message: "Failed to verify session." })
       }
-    } catch (err) {
       console.error("Session verification failed:", err)
       addNotification({ type: "error", title: "Network Error", message: "Failed to connect to authentication server." })
     }
@@ -253,7 +235,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   // 5. Logout User Session
   const logoutUser = useCallback(async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" })
+      await api.post("/api/auth/logout")
     } catch (err) {
       console.error("Logout API request error:", err)
     }
