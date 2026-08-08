@@ -1,5 +1,4 @@
 import type { Response, NextFunction } from "express"
-import { z } from "zod"
 import { prisma } from "../config/db.js"
 import { AppError } from "../middleware/errorMiddleware.js"
 import type { AuthRequest } from "../middleware/authMiddleware.js"
@@ -34,19 +33,6 @@ export const getCart = async (req: AuthRequest, res: Response, next: NextFunctio
     next(error)
   }
 }
-
-export const syncCartSchema = z.object({
-  body: z.object({
-    productId: z.string().uuid("Invalid product ID").optional(),
-    quantity: z.number().int().nonnegative().optional(),
-    items: z.array(
-      z.object({
-        productId: z.string().uuid("Invalid product ID"),
-        quantity: z.number().int().positive()
-      })
-    ).optional()
-  })
-})
 
 export const updateCart = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {

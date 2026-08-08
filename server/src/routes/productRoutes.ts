@@ -5,13 +5,15 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
-  createProductSchema,
-  updateProductSchema,
   toggleProductFavorite,
   getUserFavorites,
   getProductReviews,
   createProductReview
 } from "../controllers/productController.js"
+import {
+  createProductSchema,
+  updateProductSchema
+} from "../schemas/product.schema.js"
 import { authenticate, requireAdmin } from "../middleware/authMiddleware.js"
 import { validateRequest } from "../middleware/validateMiddleware.js"
 

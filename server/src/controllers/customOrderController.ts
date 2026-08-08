@@ -1,5 +1,4 @@
 import type { Response, NextFunction } from "express"
-import { z } from "zod"
 import { CustomOrderStatus, Role } from "@prisma/client"
 import { prisma } from "../config/db.js"
 import { AppError } from "../middleware/errorMiddleware.js"
@@ -8,28 +7,6 @@ import { uploadFile, deleteFile } from "../services/storageService.js"
 import { sendCustomOrderConfirmationEmail } from "../services/emailService.js"
 import { scanFileBufferForViruses } from "../services/virusScannerService.js"
 import { logger } from "../utils/logger.js"
-
-// Validation Schemas
-export const createCustomOrderSchema = z.object({
-  body: z.object({
-    type: z.string().min(2, "Type is required"),
-    description: z.string().min(20, "Description must be at least 20 characters").max(1000, "Description cannot exceed 1000 characters"),
-    size: z.string().optional(),
-    budget: z
-      .string()
-      .transform((val) => parseFloat(val))
-      .refine((val) => val >= 4000, { message: "Budget must be at least ₹4,000 INR" }),
-    customerName: z.string().min(2, "Name must be at least 2 characters"),
-    customerEmail: z.string().email("Invalid email format"),
-    customerPhone: z.string().min(10, "Phone number must be at least 10 digits")
-  })
-})
-
-export const updateCustomOrderStatusSchema = z.object({
-  body: z.object({
-    status: z.nativeEnum(CustomOrderStatus, { errorMap: () => ({ message: "Invalid custom order status" }) })
-  })
-})
 
 export const createCustomOrder = async (
   req: AuthRequest,

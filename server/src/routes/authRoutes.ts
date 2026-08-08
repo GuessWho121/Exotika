@@ -12,7 +12,9 @@ import {
   addAddress,
   deleteAddress,
   updateAddress,
-  verifyPhone,
+  verifyPhone
+} from "../controllers/authController.js"
+import {
   registerSchema,
   loginSchema,
   profileUpdateSchema,
@@ -21,7 +23,7 @@ import {
   googleLoginSchema,
   createAddressSchema,
   verifyPhoneSchema
-} from "../controllers/authController.js"
+} from "../schemas/auth.schema.js"
 import { authenticate, optionalAuthenticate } from "../middleware/authMiddleware.js"
 import { validateRequest } from "../middleware/validateMiddleware.js"
 import { authLimiter } from "../middleware/securityMiddleware.js"

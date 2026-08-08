@@ -2,42 +2,14 @@ import type { Response, NextFunction } from "express"
 import bcrypt from "bcryptjs"
 import { OAuth2Client } from "google-auth-library"
 import jwt from "jsonwebtoken"
-import { z } from "zod"
+
 import { prisma } from "../config/db.js"
 import { env } from "../config/env.js"
 import { AppError } from "../middleware/errorMiddleware.js"
 import type { AuthRequest } from "../middleware/authMiddleware.js"
 import { logger } from "../utils/logger.js"
 
-// Input Validation Schemas
-export const registerSchema = z.object({
-  body: z.object({
-    email: z.string().email("Invalid email format"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    name: z.string().min(2, "Name must be at least 2 characters"),
-    phone: z.string().optional(),
-    address: z.string().optional(),
-    city: z.string().optional(),
-    zipCode: z.string().optional()
-  })
-})
-
-export const loginSchema = z.object({
-  body: z.object({
-    email: z.string().email("Invalid email format"),
-    password: z.string().min(1, "Password is required")
-  })
-})
-
-export const profileUpdateSchema = z.object({
-  body: z.object({
-    name: z.string().min(2, "Name must be at least 2 characters"),
-    phone: z.string().optional(),
-    address: z.string().optional(),
-    city: z.string().optional(),
-    zipCode: z.string().optional()
-  })
-})
+// Helper: Generate JWT and set HttpOnly Cookie
 
 // Helper: Generate JWT and set HttpOnly Cookie
 const sendToken = (
@@ -251,25 +223,6 @@ export const updateProfile = async (
 
 const otpStore = new Map<string, { otp: string; expiresAt: number }>()
 
-export const sendOtpSchema = z.object({
-  body: z.object({
-    contact: z.string().min(3, "Contact (email or phone) is required")
-  })
-})
-
-export const verifyOtpSchema = z.object({
-  body: z.object({
-    contact: z.string().min(3, "Contact (email or phone) is required"),
-    otp: z.string().length(6, "OTP must be exactly 6 digits")
-  })
-})
-
-export const googleLoginSchema = z.object({
-  body: z.object({
-    token: z.string().min(1, "Google token is required")
-  })
-})
-
 export const sendOtp = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { contact } = req.body
@@ -373,19 +326,6 @@ export const googleLogin = async (
     next(error)
   }
 }
-
-// Address validation schema
-export const createAddressSchema = z.object({
-  body: z.object({
-    title: z.string().optional(),
-    name: z.string().min(2, "Name must be at least 2 characters"),
-    phone: z.string().min(7, "Phone number is invalid"),
-    address: z.string().min(5, "Address must be at least 5 characters"),
-    city: z.string().min(2, "City must be at least 2 characters"),
-    zipCode: z.string().min(3, "ZIP Code is invalid"),
-    country: z.string().optional()
-  })
-})
 
 export const getAddresses = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
@@ -504,13 +444,6 @@ export const updateAddress = async (req: AuthRequest, res: Response, next: NextF
     next(error)
   }
 }
-
-export const verifyPhoneSchema = z.object({
-  body: z.object({
-    phone: z.string().min(10, "Phone number must be at least 10 digits"),
-    otp: z.string().length(6, "OTP must be exactly 6 digits")
-  })
-})
 
 export const verifyPhone = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {

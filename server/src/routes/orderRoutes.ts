@@ -4,10 +4,12 @@ import {
   getOrders,
   updateOrderStatus,
   verifyPayment,
-  getShippingQuote,
+  getShippingQuote
+} from "../controllers/orderController.js"
+import {
   createOrderSchema,
   updateOrderStatusSchema
-} from "../controllers/orderController.js"
+} from "../schemas/order.schema.js"
 import { authenticate, optionalAuthenticate, requireAdmin } from "../middleware/authMiddleware.js"
 import { validateRequest } from "../middleware/validateMiddleware.js"
 

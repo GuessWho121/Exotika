@@ -2,10 +2,12 @@ import { Router } from "express"
 import {
   createCustomOrder,
   getCustomOrders,
-  updateCustomOrderStatus,
+  updateCustomOrderStatus
+} from "../controllers/customOrderController.js"
+import {
   createCustomOrderSchema,
   updateCustomOrderStatusSchema
-} from "../controllers/customOrderController.js"
+} from "../schemas/customOrder.schema.js"
 import { authenticate, requireAdmin } from "../middleware/authMiddleware.js"
 import { upload } from "../middleware/uploadMiddleware.js"
 import { validateRequest } from "../middleware/validateMiddleware.js"

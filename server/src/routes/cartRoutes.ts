@@ -1,5 +1,6 @@
 import { Router } from "express"
-import { getCart, updateCart, deleteCartItem, clearCart, syncCartSchema } from "../controllers/cartController.js"
+import { getCart, updateCart, deleteCartItem, clearCart } from "../controllers/cartController.js"
+import { syncCartSchema } from "../schemas/cart.schema.js"
 import { authenticate } from "../middleware/authMiddleware.js"
 import { validateRequest } from "../middleware/validateMiddleware.js"
 
