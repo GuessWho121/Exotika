@@ -121,3 +121,36 @@ export const verifyRazorpaySignature = (
     return false
   }
 }
+
+// Verifies that a Razorpay order ID matches the expected DB order receipt ID
+export const verifyRazorpayOrderReceipt = async (
+  razorpayOrderId: string,
+  expectedOrderId: string
+): Promise<boolean> => {
+  if (env.RAZORPAY_SANDBOX || razorpayOrderId.startsWith("rzp_mock_")) {
+    const parts = razorpayOrderId.split("_")
+    const parsedId = parts[2]
+    return parsedId === expectedOrderId
+  }
+
+  const keyId = env.RAZORPAY_KEY_ID
+  const keySecret = env.RAZORPAY_KEY_SECRET
+  if (!keyId || !keySecret) {
+    return false
+  }
+
+  try {
+    const authString = Buffer.from(`${keyId}:${keySecret}`).toString("base64")
+    const res = await fetch(`https://api.razorpay.com/v1/orders/${razorpayOrderId}`, {
+      headers: { "Authorization": `Basic ${authString}` }
+    })
+    if (!res.ok) {
+      return false
+    }
+    const data = await res.json() as any
+    return data && data.receipt === expectedOrderId
+  } catch (err) {
+    logger.error("Error fetching order from Razorpay:", err)
+    return false
+  }
+}

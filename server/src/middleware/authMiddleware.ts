@@ -161,7 +161,11 @@ export const optionalAuthenticate = async (
     }
     next()
   } catch (err) {
-    // Fail silently for optional auth
-    next()
+    if (err instanceof jwt.JsonWebTokenError || err instanceof jwt.TokenExpiredError) {
+      // Fail silently for invalid/expired tokens, allowing guest checkout/navigation
+      return next()
+    }
+    // Propagate server errors (e.g. database connection failures) safely
+    next(err)
   }
 }

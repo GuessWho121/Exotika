@@ -170,7 +170,8 @@ export const getMe = async (
           address: user.address,
           city: user.city,
           zipCode: user.zipCode,
-          phoneVerified: user.phoneVerified
+          phoneVerified: user.phoneVerified,
+          createdAt: user.createdAt
         }
       }
     })
@@ -216,7 +217,8 @@ export const updateProfile = async (
           address: updatedUser.address,
           city: updatedUser.city,
           zipCode: updatedUser.zipCode,
-          phoneVerified: updatedUser.phoneVerified
+          phoneVerified: updatedUser.phoneVerified,
+          createdAt: updatedUser.createdAt
         }
       }
     })

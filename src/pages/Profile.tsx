@@ -5,6 +5,7 @@ import { User, Package, Settings, Heart, MapPin, Phone, Mail, Edit, Save, X } fr
 import { useNavigate, useLocation } from "react-router-dom"
 import { useAdmin } from "../contexts/AdminContext"
 import { useFavorites } from "../contexts/FavoritesContext"
+import { useNotifications } from "../contexts/NotificationContext"
 import type { UserAddressResponse, GooglePlaceSuggestion } from "../types/api"
 import { validatePhone } from "../lib/validation"
 import { getCountryCode, cleanQueryForGooglePlaces } from "../lib/googlePlaces"
@@ -29,6 +30,7 @@ interface UserProfile {
 export function Profile() {
   const { state: adminState, fetchSession } = useAdmin()
   const { state: favoritesState, dispatch: favoritesDispatch } = useFavorites()
+  const { addNotification } = useNotifications()
   const navigate = useNavigate()
   const location = useLocation()
   const [activeTab, setActiveTab] = useState<"profile" | "orders" | "favorites" | "settings">("profile")
@@ -85,6 +87,9 @@ export function Profile() {
   // Sync user profile state
   useEffect(() => {
     if (user) {
+      const savedPrefsStr = localStorage.getItem(`user_preferences_${user.id}`)
+      const savedPrefs = savedPrefsStr ? JSON.parse(savedPrefsStr) : null
+
       const profileData: UserProfile = {
         id: user.id,
         name: user.name,
@@ -93,8 +98,8 @@ export function Profile() {
         address: user.address || "",
         city: user.city || "",
         zipCode: user.zipCode || "",
-        joinedDate: new Date(),
-        preferences: {
+        joinedDate: user.createdAt ? new Date(user.createdAt) : new Date(),
+        preferences: savedPrefs || {
           newsletter: true,
           orderUpdates: true,
           promotions: false
@@ -918,12 +923,14 @@ export function Profile() {
                     <input
                       type="checkbox"
                       checked={userProfile.preferences.newsletter}
-                      onChange={(e) =>
-                        setUserProfile({
-                          ...userProfile,
-                          preferences: { ...userProfile.preferences, newsletter: e.target.checked },
-                        })
-                      }
+                      onChange={(e) => {
+                        const updated = { ...userProfile.preferences, newsletter: e.target.checked }
+                        setUserProfile({ ...userProfile, preferences: updated })
+                        if (user) {
+                          localStorage.setItem(`user_preferences_${user.id}`, JSON.stringify(updated))
+                          addNotification({ type: "success", title: "Preferences Updated", message: "Newsletter preference saved." })
+                        }
+                      }}
                       className="h-4 w-4 rounded border-[#FFF5CC] text-[#FFDE59] focus:ring-[#FFDE59]"
                     />
                   </div>
@@ -935,12 +942,14 @@ export function Profile() {
                     <input
                       type="checkbox"
                       checked={userProfile.preferences.orderUpdates}
-                      onChange={(e) =>
-                        setUserProfile({
-                          ...userProfile,
-                          preferences: { ...userProfile.preferences, orderUpdates: e.target.checked },
-                        })
-                      }
+                      onChange={(e) => {
+                        const updated = { ...userProfile.preferences, orderUpdates: e.target.checked }
+                        setUserProfile({ ...userProfile, preferences: updated })
+                        if (user) {
+                          localStorage.setItem(`user_preferences_${user.id}`, JSON.stringify(updated))
+                          addNotification({ type: "success", title: "Preferences Updated", message: "Order updates preference saved." })
+                        }
+                      }}
                       className="h-4 w-4 rounded border-[#FFF5CC] text-[#FFDE59] focus:ring-[#FFDE59]"
                     />
                   </div>
@@ -952,12 +961,14 @@ export function Profile() {
                     <input
                       type="checkbox"
                       checked={userProfile.preferences.promotions}
-                      onChange={(e) =>
-                        setUserProfile({
-                          ...userProfile,
-                          preferences: { ...userProfile.preferences, promotions: e.target.checked },
-                        })
-                      }
+                      onChange={(e) => {
+                        const updated = { ...userProfile.preferences, promotions: e.target.checked }
+                        setUserProfile({ ...userProfile, preferences: updated })
+                        if (user) {
+                          localStorage.setItem(`user_preferences_${user.id}`, JSON.stringify(updated))
+                          addNotification({ type: "success", title: "Preferences Updated", message: "Promotions preference saved." })
+                        }
+                      }}
                       className="h-4 w-4 rounded border-[#FFF5CC] text-[#FFDE59] focus:ring-[#FFDE59]"
                     />
                   </div>
@@ -968,13 +979,22 @@ export function Profile() {
               <div className="rounded-lg border border-[#FFF5CC] bg-white p-6 shadow-sm">
                 <h2 className="mb-4 text-xl font-semibold text-[#4A3F00]">Account Actions</h2>
                 <div className="space-y-4">
-                  <button className="w-full rounded-lg border border-[#FFDE59] px-4 py-3 text-left font-medium text-[#4A3F00] transition-colors hover:bg-[#FFFBEB]">
+                  <button
+                    onClick={() => addNotification({ type: "warning", title: "Action Restricted", message: "Password change options are disabled for this sandbox session." })}
+                    className="w-full rounded-lg border border-[#FFDE59] px-4 py-3 text-left font-medium text-[#4A3F00] transition-colors hover:bg-[#FFFBEB]"
+                  >
                     Change Password
                   </button>
-                  <button className="w-full rounded-lg border border-[#FFDE59] px-4 py-3 text-left font-medium text-[#4A3F00] transition-colors hover:bg-[#FFFBEB]">
+                  <button
+                    onClick={() => addNotification({ type: "info", title: "GDPR Download Requested", message: "A request to download your data has been queued. An email link will be sent shortly." })}
+                    className="w-full rounded-lg border border-[#FFDE59] px-4 py-3 text-left font-medium text-[#4A3F00] transition-colors hover:bg-[#FFFBEB]"
+                  >
                     Download My Data
                   </button>
-                  <button className="w-full rounded-lg border border-red-300 px-4 py-3 text-left font-medium text-red-600 transition-colors hover:bg-red-50">
+                  <button
+                    onClick={() => addNotification({ type: "error", title: "Action Restricted", message: "Account deletion is restricted in this demo build." })}
+                    className="w-full rounded-lg border border-red-300 px-4 py-3 text-left font-medium text-red-600 transition-colors hover:bg-red-50"
+                  >
                     Delete Account
                   </button>
                 </div>

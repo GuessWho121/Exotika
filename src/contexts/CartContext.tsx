@@ -13,6 +13,35 @@ export interface CartItem {
   category: "painting" | "craft" | "tote-bag" | "apparel"
 }
 
+export const validateCartItems = (items: any[]): CartItem[] => {
+  if (!Array.isArray(items)) return []
+  const validCategories = ["painting", "craft", "tote-bag", "apparel"]
+  return items
+    .filter((item) => {
+      return (
+        item &&
+        typeof item.id === "string" &&
+        typeof item.title === "string" &&
+        typeof item.price === "number" &&
+        !isNaN(item.price) &&
+        item.price >= 0 &&
+        typeof item.quantity === "number" &&
+        Number.isInteger(item.quantity) &&
+        item.quantity >= 1 &&
+        typeof item.category === "string" &&
+        validCategories.includes(item.category)
+      )
+    })
+    .map((item) => ({
+      id: item.id,
+      title: item.title,
+      price: item.price,
+      image: typeof item.image === "string" ? item.image : "",
+      quantity: item.quantity,
+      category: item.category
+    }))
+}
+
 interface CartState {
   items: CartItem[]
   total: number
@@ -125,11 +154,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
             
             // 2. Check if we have guest items in localStorage to merge
             const saved = localStorage.getItem("exotika_cart")
-            let localItems = []
+            let localItems: CartItem[] = []
             if (saved) {
               const parsed = JSON.parse(saved)
               if (parsed && Array.isArray(parsed.items)) {
-                localItems = parsed.items
+                localItems = validateCartItems(parsed.items)
               }
             }
 
@@ -208,8 +237,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
           if (saved) {
             const parsed = JSON.parse(saved)
             if (parsed && Array.isArray(parsed.items)) {
+              const validatedItems = validateCartItems(parsed.items)
+              const total = validatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+              const itemCount = validatedItems.reduce((sum, item) => sum + item.quantity, 0)
+              
               skipSyncRef.current = true
-              dispatch({ type: "INIT_CART", payload: parsed })
+              dispatch({
+                type: "INIT_CART",
+                payload: { items: validatedItems, total, itemCount }
+              })
+            } else {
+              skipSyncRef.current = true
+              dispatch({
+                type: "INIT_CART",
+                payload: { items: [], total: 0, itemCount: 0 }
+              })
             }
           } else {
             skipSyncRef.current = true

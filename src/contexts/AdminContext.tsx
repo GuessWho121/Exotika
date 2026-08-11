@@ -67,6 +67,7 @@ export interface User {
   city?: string
   zipCode?: string
   phoneVerified?: boolean
+  createdAt?: string
 }
 
 interface AdminState {

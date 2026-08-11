@@ -3,7 +3,7 @@ import { OrderStatus, Role } from "@prisma/client"
 import { prisma } from "../config/db.js"
 import { AppError } from "../middleware/errorMiddleware.js"
 import type { AuthRequest } from "../middleware/authMiddleware.js"
-import { createRazorpayOrder, verifyRazorpaySignature } from "../services/paymentService.js"
+import { createRazorpayOrder, verifyRazorpaySignature, verifyRazorpayOrderReceipt } from "../services/paymentService.js"
 import { calculateShippingQuote, createShiprocketOrder } from "../services/shippingService.js"
 import { sendOrderConfirmationEmail } from "../services/emailService.js"
 import { logger } from "../utils/logger.js"
@@ -288,6 +288,22 @@ export const verifyPayment = async (
 
     if (!order) {
       throw new AppError("Order not found", 404)
+    }
+
+    // Security: Assert order ownership for authenticated users
+    if (req.user) {
+      const isOwner =
+        order.userId === req.user.id ||
+        order.customerEmail.toLowerCase() === req.user.email.toLowerCase()
+      if (!isOwner && req.user.role !== Role.ADMIN) {
+        throw new AppError("You do not have permission to verify payment for this order.", 403)
+      }
+    }
+
+    // Security: Verify that the Razorpay order ID matches this DB order ID
+    const isReceiptValid = await verifyRazorpayOrderReceipt(razorpayOrderId, orderId)
+    if (!isReceiptValid) {
+      throw new AppError("Payment verification failed. Razorpay order mismatch.", 400)
     }
 
     if (order.isPaid) {
