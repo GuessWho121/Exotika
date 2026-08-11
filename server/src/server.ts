@@ -46,7 +46,9 @@ const startServer = async () => {
     const server = app.listen(env.PORT, () => {
       logger.info(`🚀 Server running in [${env.NODE_ENV}] mode on port ${env.PORT}`)
       // Run orphaned order linking in the background after startup completes
-      linkOrphanedOrders()
+      linkOrphanedOrders().catch((err) => {
+        logger.error(`Unhandled error during background orphaned orders linking: ${err?.message || err}`)
+      })
     })
 
     // 4. Graceful shutdown handler

@@ -1,5 +1,7 @@
 import type { Request, Response, NextFunction } from "express"
 import rateLimit from "express-rate-limit"
+import RedisStore from "rate-limit-redis"
+import { redis } from "../config/redis.js"
 
 // 1. Recursive XSS and HTML Tag Stripper Sanitizer
 export const sanitizeString = (str: string): string => {
@@ -45,7 +47,11 @@ export const authLimiter = rateLimit({
   max: 5, // Max 5 request attempts
   message: "Too many login/registration attempts from this IP. Please try again after 5 minutes.",
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  store: new RedisStore({
+    // @ts-expect-error - Known ioredis compatibility
+    sendCommand: (...args: string[]) => redis.call(args[0], ...args.slice(1)),
+  })
 })
 
 // 3. Rate Limiter for Custom Order uploads (Denial of Storage protection)
@@ -54,7 +60,11 @@ export const customOrderLimiter = rateLimit({
   max: 10, // Max 10 custom orders per window
   message: "Too many custom order submissions from this IP. Please try again after 15 minutes.",
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  store: new RedisStore({
+    // @ts-expect-error - Known ioredis compatibility
+    sendCommand: (...args: string[]) => redis.call(args[0], ...args.slice(1)),
+  })
 })
 
 // 4. Rate Limiter for Order creation and payment verification (Spam prevention)
@@ -63,7 +73,11 @@ export const orderLimiter = rateLimit({
   max: 30, // Max 30 order requests per window
   message: "Too many order creation or payment requests from this IP. Please try again after 15 minutes.",
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  store: new RedisStore({
+    // @ts-expect-error - Known ioredis compatibility
+    sendCommand: (...args: string[]) => redis.call(args[0], ...args.slice(1)),
+  })
 })
 
 // 5. Rate Limiter for Review posting (Spam prevention)
@@ -72,5 +86,9 @@ export const reviewLimiter = rateLimit({
   max: 15, // Max 15 review submissions per window
   message: "Too many review submissions from this IP. Please try again after 15 minutes.",
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  store: new RedisStore({
+    // @ts-expect-error - Known ioredis compatibility
+    sendCommand: (...args: string[]) => redis.call(args[0], ...args.slice(1)),
+  })
 })

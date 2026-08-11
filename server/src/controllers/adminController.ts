@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from "express"
 import { prisma } from "../config/db.js"
 import { OrderStatus } from "@prisma/client"
 import { AppError } from "../middleware/errorMiddleware.js"
+import { redis } from "../config/redis.js"
+import { logger } from "../utils/logger.js"
 
 export const getAdminStats = async (
   req: Request,
@@ -9,6 +11,16 @@ export const getAdminStats = async (
   next: NextFunction
 ) => {
   try {
+    const cacheKey = "admin_stats"
+    try {
+      const cachedStats = await redis.get(cacheKey)
+      if (cachedStats) {
+        return res.status(200).json(JSON.parse(cachedStats))
+      }
+    } catch (cacheErr) {
+      logger.error("Failed to fetch admin stats from Redis cache:", cacheErr)
+    }
+
     // 1. Total revenue & count & pending count
     const aggregations = await prisma.order.aggregate({
       _sum: {
@@ -86,7 +98,7 @@ export const getAdminStats = async (
       categoryCounts[normalizedCat] = Number(item.count || 0)
     })
 
-    res.status(200).json({
+    const result = {
       status: "success",
       data: {
         totalRevenue,
@@ -95,7 +107,15 @@ export const getAdminStats = async (
         chartData,
         categoryCounts
       }
-    })
+    }
+
+    try {
+      await redis.setex(cacheKey, 15, JSON.stringify(result)) // Cache for 15 seconds
+    } catch (cacheErr) {
+      logger.error("Failed to write admin stats to Redis cache:", cacheErr)
+    }
+
+    res.status(200).json(result)
   } catch (error) {
     next(error)
   }

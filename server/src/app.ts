@@ -4,6 +4,8 @@ import helmet from "helmet"
 import morgan from "morgan"
 import cookieParser from "cookie-parser"
 import rateLimit from "express-rate-limit"
+import RedisStore from "rate-limit-redis"
+import { redis } from "./config/redis.js"
 import { env } from "./config/env.js"
 import { errorHandler } from "./middleware/errorMiddleware.js"
 import authRoutes from "./routes/authRoutes.js"
@@ -66,7 +68,11 @@ app.use(morgan(":method :url :status :res[content-length] - :response-time ms", 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 200, // Limit each IP to 200 requests per window
-  message: "Too many requests from this IP, please try again after 15 minutes."
+  message: "Too many requests from this IP, please try again after 15 minutes.",
+  store: new RedisStore({
+    // @ts-expect-error - Known ioredis compatibility
+    sendCommand: (...args: string[]) => redis.call(args[0], ...args.slice(1)),
+  })
 })
 app.use("/api", limiter)
 

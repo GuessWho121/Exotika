@@ -1,10 +1,12 @@
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pg_trgm]
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 enum Role {
@@ -80,6 +82,8 @@ model Product {
   reviews     Review[]
 
   @@index([category, createdAt(sort: Desc)])
+  @@index([title(ops: raw("gin_trgm_ops"))], type: Gin, name: "products_title_trgm_idx")
+  @@index([description(ops: raw("gin_trgm_ops"))], type: Gin, name: "products_description_trgm_idx")
   @@map("products")
 }
 

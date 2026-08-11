@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken"
 import { Role } from "@prisma/client"
 import { env } from "../config/env.js"
 import { prisma } from "../config/db.js"
+import { redis } from "../config/redis.js"
 import { AppError } from "./errorMiddleware.js"
 
 export interface AuthRequest extends Request {
@@ -49,10 +50,27 @@ export const authenticate = async (
     // 3. Verify JWT token signature
     const decoded = jwt.verify(token, env.JWT_SECRET, { algorithms: ["HS256"] }) as DecodedToken
 
-    // 4. Verify user still exists in the database
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.id }
-    })
+    // 4. Verify user still exists in the database/cache
+    const cacheKey = `user:${decoded.id}`
+    let cachedUserStr = await redis.get(cacheKey)
+    let user: { id: string; email: string; role: Role; tokenVersion: number } | null = null
+
+    if (cachedUserStr) {
+      user = JSON.parse(cachedUserStr)
+    } else {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: decoded.id }
+      })
+      if (dbUser) {
+        user = {
+          id: dbUser.id,
+          email: dbUser.email,
+          role: dbUser.role,
+          tokenVersion: dbUser.tokenVersion
+        }
+        await redis.setex(cacheKey, 300, JSON.stringify(user)) // Cache for 5 minutes
+      }
+    }
 
     if (!user) {
       throw new AppError("User belonging to this token no longer exists.", 401)
@@ -112,9 +130,27 @@ export const optionalAuthenticate = async (
 
     if (token) {
       const decoded = jwt.verify(token, env.JWT_SECRET, { algorithms: ["HS256"] }) as DecodedToken
-      const user = await prisma.user.findUnique({
-        where: { id: decoded.id }
-      })
+      const cacheKey = `user:${decoded.id}`
+      let cachedUserStr = await redis.get(cacheKey)
+      let user: { id: string; email: string; role: Role; tokenVersion: number } | null = null
+
+      if (cachedUserStr) {
+        user = JSON.parse(cachedUserStr)
+      } else {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: decoded.id }
+        })
+        if (dbUser) {
+          user = {
+            id: dbUser.id,
+            email: dbUser.email,
+            role: dbUser.role,
+            tokenVersion: dbUser.tokenVersion
+          }
+          await redis.setex(cacheKey, 300, JSON.stringify(user)) // Cache for 5 minutes
+        }
+      }
+
       if (user && (decoded.tokenVersion === undefined || decoded.tokenVersion === user.tokenVersion)) {
         req.user = {
           id: user.id,

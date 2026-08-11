@@ -26,6 +26,7 @@ export function CustomOrder() {
     name: "",
     email: "",
     phone: "",
+    state: "",
   })
 
   const [referenceImages, setReferenceImages] = useState<File[]>([])
@@ -133,7 +134,8 @@ export function CustomOrder() {
   const isStep3Valid =
     formData.name.trim().length >= 2 &&
     /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email) &&
-    validatePhone(formData.phone);
+    validatePhone(formData.phone) &&
+    formData.state.trim().length >= 2;
 
   const getNextButtonProps = () => {
     if (activeStep === 1) {
@@ -160,6 +162,7 @@ export function CustomOrder() {
       data.append("customerName", formData.name)
       data.append("customerEmail", formData.email)
       data.append("customerPhone", formData.phone)
+      data.append("customerState", formData.state)
 
       referenceImages.forEach((file) => {
         data.append("references", file)
@@ -395,7 +398,7 @@ export function CustomOrder() {
                     placeholder="Enter your email"
                   />
                 </div>
-                <div className="sm:col-span-2">
+                <div>
                   <label className="block mb-1.5 text-sm font-medium text-[#4A3F00]">Phone Number</label>
                   <Input
                     type="tel"
@@ -404,6 +407,17 @@ export function CustomOrder() {
                     onChange={handleInputChange}
                     className={fieldErrors.phone ? 'border-red-500 bg-red-50 focus:ring-red-500' : 'border-[#E6C747] bg-[#FFFBEB] text-[#4A3F00] focus:ring-[#FFDE59]'}
                     placeholder="Enter phone number (7 to 20 digits)"
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1.5 text-sm font-medium text-[#4A3F00]">State</label>
+                  <Input
+                    type="text"
+                    name="state"
+                    value={formData.state}
+                    onChange={handleInputChange}
+                    className={fieldErrors.state ? 'border-red-500 bg-red-50 focus:ring-red-500' : 'border-[#E6C747] bg-[#FFFBEB] text-[#4A3F00] focus:ring-[#FFDE59]'}
+                    placeholder="Enter your state (e.g. Maharashtra)"
                   />
                 </div>
               </CardContent>

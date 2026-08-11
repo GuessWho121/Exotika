@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useReducer, useEffect, type ReactNode } from "react"
+import { createContext, useContext, useReducer, useEffect, useRef, type ReactNode } from "react"
 import { useAdmin } from "./AdminContext"
 import type { FavoriteApiResponse } from "../types/api"
 
@@ -89,8 +89,17 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     }
   }, [user])
 
+  const inFlightRef = useRef<Set<string>>(new Set())
+
   // Custom dispatch wrapper to sync favorites changes with the server
   const customDispatch = async (action: FavoritesAction) => {
+    if (action.type === "TOGGLE_FAVORITE") {
+      if (inFlightRef.current.has(action.payload)) {
+        return // Ignore duplicate concurrent toggles for the same product
+      }
+      inFlightRef.current.add(action.payload)
+    }
+
     // 1. Optimistically update local frontend state
     dispatch(action)
 
@@ -102,6 +111,8 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
         })
       } catch (err) {
         console.error("Failed to sync favorite with server:", err)
+      } finally {
+        inFlightRef.current.delete(action.payload)
       }
     }
   }

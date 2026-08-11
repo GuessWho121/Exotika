@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken"
 
 import { prisma } from "../config/db.js"
 import { env } from "../config/env.js"
+import { redis } from "../config/redis.js"
 import { AppError } from "../middleware/errorMiddleware.js"
 import type { AuthRequest } from "../middleware/authMiddleware.js"
 import { logger } from "../utils/logger.js"
@@ -118,6 +119,7 @@ export const logout = async (
         where: { id: req.user.id },
         data: { tokenVersion: { increment: 1 } }
       })
+      await redis.del(`user:${req.user.id}`)
     }
   } catch (err) {
     logger.error("Failed to increment tokenVersion on logout:", err)
@@ -199,6 +201,8 @@ export const updateProfile = async (
         zipCode
       }
     })
+
+    await redis.del(`user:${req.user.id}`)
 
     res.status(200).json({
       status: "success",
@@ -523,6 +527,8 @@ export const verifyPhone = async (req: AuthRequest, res: Response, next: NextFun
         phoneVerified: true
       }
     })
+
+    await redis.del(`user:${req.user.id}`)
 
     res.status(200).json({
       status: "success",

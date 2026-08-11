@@ -32,6 +32,15 @@ services:
     networks:
       - exotika-dev-network
 
+  exotika-redis:
+    image: redis:alpine
+    container_name: exotika-redis-dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - exotika-dev-network
+
   exotika-backend:
     build:
       context: ./server
@@ -47,6 +56,7 @@ services:
       - NODE_ENV=development
       - PORT=8080
       - DATABASE_URL=postgresql://postgres:postgres@exotika-db:5432/exotika_db?schema=public&connection_limit=10
+      - REDIS_URL=redis://exotika-redis:6379
       - JWT_SECRET=supersecretjwtkeyreplaceinproduction
       - CORS_ORIGIN=http://localhost:5173
       - S3_ENDPOINT=http://exotika-minio:9000
@@ -60,6 +70,7 @@ services:
     depends_on:
       - exotika-db
       - exotika-minio
+      - exotika-redis
     networks:
       - exotika-dev-network
 

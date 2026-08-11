@@ -38,7 +38,7 @@ export function ProductDetail() {
     price: Number(productData.price),
     image: productData.imageUrl,
     description: productData.description || "",
-    category: productData.category.toLowerCase() as any,
+    category: productData.category.toLowerCase().replace(/_/g, "-") as any,
     inStock: productData.inStock,
     createdAt: new Date(productData.createdAt),
     height: productData.height || undefined,

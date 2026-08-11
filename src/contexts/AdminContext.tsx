@@ -131,14 +131,14 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   // 1. Fetch catalog products
   const refreshProducts = useCallback(async () => {
     try {
-      const json = await api.get("/api/products?limit=1000")
+      const json = await api.get("/api/products?limit=100")
       const formatted: Product[] = json.data.products.map((p: ProductResponse) => ({
         id: p.id,
         title: p.title,
         price: Number(p.price),
         image: p.imageUrl,
         description: p.description || "",
-        category: p.category.toLowerCase() as any,
+        category: p.category.toLowerCase().replace(/_/g, "-") as any,
         inStock: p.inStock,
         createdAt: new Date(p.createdAt),
         height: p.height || undefined,

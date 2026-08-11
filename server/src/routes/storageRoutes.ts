@@ -10,7 +10,13 @@ const router = Router()
 
 router.get("/*", optionalAuthenticate as any, async (req: any, res, next) => {
   try {
-    const key = req.path.substring(1) // Remove the leading '/'
+    let key = req.path.substring(1) // Remove the leading '/'
+    try {
+      key = decodeURIComponent(key)
+    } catch (err) {
+      throw new AppError("Malformed URL key parameter", 400)
+    }
+
     if (!key) {
       throw new AppError("File key is required", 400)
     }

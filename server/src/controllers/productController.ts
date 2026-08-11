@@ -2,8 +2,21 @@ import type { Request, Response, NextFunction } from "express"
 import type { AuthRequest } from "../middleware/authMiddleware.js"
 import { Category } from "@prisma/client"
 import { prisma } from "../config/db.js"
+import { redis } from "../config/redis.js"
+import { logger } from "../utils/logger.js"
 import { AppError } from "../middleware/errorMiddleware.js"
 import { uploadBase64Image } from "../services/storageService.js"
+
+export const clearProductCache = async () => {
+  try {
+    const keys = await redis.keys("products:*")
+    if (keys.length > 0) {
+      await redis.del(...keys)
+    }
+  } catch (err) {
+    logger.error("Failed to clear product cache from Redis:", err)
+  }
+}
 
 export const getProducts = async (
   req: Request,
@@ -13,9 +26,26 @@ export const getProducts = async (
   try {
     const { category, search, sort, page = "1", limit = "10" } = req.query
 
-    const pageNumber = parseInt(page as string, 10)
-    const limitNumber = parseInt(limit as string, 10)
+    const pageNumber = Math.max(1, parseInt(page as string, 10) || 1)
+    let limitNumber = Math.max(1, parseInt(limit as string, 10) || 10)
+    
+    // Clamp to 1000 for admin user, 100 for regular/guest users
+    const maxLimit = (req as any).user?.role === "ADMIN" ? 1000 : 100
+    if (limitNumber > maxLimit) {
+      limitNumber = maxLimit
+    }
     const skip = (pageNumber - 1) * limitNumber
+
+    // Try returning cached products first
+    const cacheKey = `products:${category || ""}:${search || ""}:${sort || ""}:${pageNumber}:${limitNumber}`
+    try {
+      const cachedProductsStr = await redis.get(cacheKey)
+      if (cachedProductsStr) {
+        return res.status(200).json(JSON.parse(cachedProductsStr))
+      }
+    } catch (cacheErr) {
+      logger.error("Failed to fetch products from Redis cache:", cacheErr)
+    }
 
     // Build Prisma query filters
     const where: any = {}
@@ -55,7 +85,7 @@ export const getProducts = async (
       prisma.product.count({ where })
     ])
 
-    res.status(200).json({
+    const responsePayload = {
       status: "success",
       results: products.length,
       pagination: {
@@ -65,7 +95,15 @@ export const getProducts = async (
         totalResults: total
       },
       data: { products }
-    })
+    }
+
+    try {
+      await redis.setex(cacheKey, 60, JSON.stringify(responsePayload)) // Cache for 60 seconds
+    } catch (cacheErr) {
+      logger.error("Failed to write products to Redis cache:", cacheErr)
+    }
+
+    res.status(200).json(responsePayload)
   } catch (error) {
     next(error)
   }
@@ -112,6 +150,8 @@ export const createProduct = async (
       data: req.body
     })
 
+    await clearProductCache()
+
     res.status(201).json({
       status: "success",
       data: { product: newProduct }
@@ -138,6 +178,8 @@ export const updateProduct = async (
       data: req.body
     })
 
+    await clearProductCache()
+
     res.status(200).json({
       status: "success",
       data: { product: updatedProduct }
@@ -158,6 +200,8 @@ export const deleteProduct = async (
     await prisma.product.delete({
       where: { id }
     })
+
+    await clearProductCache()
 
     res.status(200).json({
       status: "success",

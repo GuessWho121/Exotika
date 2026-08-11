@@ -112,6 +112,7 @@ export function Checkout() {
       formData.addressLine1.trim().length >= 1 &&
       formData.addressLine2.trim().length >= 3 &&
       formData.city.trim().length >= 2 &&
+      formData.state.trim().length >= 2 &&
       formData.zipCode.trim().length >= 3 &&
       formData.country.trim().length >= 2
     );
@@ -278,7 +279,9 @@ export function Checkout() {
             console.error("Failed to fetch shipping quote:", err)
           }
         } finally {
-          setIsLoadingShipping(false)
+          if (!controller.signal.aborted) {
+            setIsLoadingShipping(false)
+          }
         }
       }
       fetchShippingQuote()
@@ -985,7 +988,7 @@ export function Checkout() {
                         )}
                       </div>
 
-                      <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="grid gap-4 sm:grid-cols-3">
                         <div>
                           <label className="block mb-1.5 text-sm font-medium text-[#4A3F00]">Town/City</label>
                           <Input
@@ -995,6 +998,17 @@ export function Checkout() {
                             onChange={handleInputChange}
                             className={fieldErrors.city ? 'border-red-500 bg-red-50 focus:ring-red-500' : 'border-[#E6C747] bg-[#FFFBEB] text-[#4A3F00] focus:ring-[#FFDE59]'}
                             placeholder="Enter city"
+                          />
+                        </div>
+                        <div>
+                          <label className="block mb-1.5 text-sm font-medium text-[#4A3F00]">State</label>
+                          <Input
+                            type="text"
+                            name="state"
+                            value={formData.state}
+                            onChange={handleInputChange}
+                            className={fieldErrors.state ? 'border-red-500 bg-red-50 focus:ring-red-500' : 'border-[#E6C747] bg-[#FFFBEB] text-[#4A3F00] focus:ring-[#FFDE59]'}
+                            placeholder="Enter state"
                           />
                         </div>
                         <div>

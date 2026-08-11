@@ -1,5 +1,6 @@
 import { env } from "../config/env.js"
 import { logger } from "../utils/logger.js"
+import { redis } from "../config/redis.js"
 
 export interface ShippingQuote {
   courierName: string
@@ -7,9 +8,6 @@ export interface ShippingQuote {
   etd: string // Estimated delivery date
   serviceabilityId: number
 }
-
-let shiprocketToken: string | null = null
-let tokenExpiry: number | null = null
 
 // Helper to authenticate and retrieve Shiprocket API JWT token
 export const getShiprocketToken = async (): Promise<string | null> => {
@@ -25,8 +23,9 @@ export const getShiprocketToken = async (): Promise<string | null> => {
   }
 
   // Token is still active (expire tokens slightly early for safety margins)
-  if (shiprocketToken && tokenExpiry && Date.now() < tokenExpiry) {
-    return shiprocketToken
+  const cachedToken = await redis.get("shiprocket_token")
+  if (cachedToken) {
+    return cachedToken
   }
 
   try {
@@ -45,10 +44,10 @@ export const getShiprocketToken = async (): Promise<string | null> => {
 
     const data = await res.json() as any
     if (data && data.token) {
-      shiprocketToken = data.token
-      // Shiprocket tokens are typically valid for 10 days; we expire them in 9 days
-      tokenExpiry = Date.now() + 9 * 24 * 60 * 60 * 1000 
-      return shiprocketToken
+      const token = data.token
+      // Shiprocket tokens are typically valid for 10 days; we expire them in 9 days in Redis cache
+      await redis.setex("shiprocket_token", 9 * 24 * 60 * 60, token)
+      return token
     }
   } catch (error) {
     logger.error("❌ Error authenticating with Shiprocket API:", error)
@@ -64,6 +63,17 @@ export const calculateShippingQuote = async (
   isCod: boolean = false,
   country: string = "India"
 ): Promise<ShippingQuote> => {
+  const cacheKey = `shipping_quote:${country.toLowerCase()}:${deliveryPostcode}:${totalWeightKg}:${isCod}`
+  try {
+    const cachedQuoteStr = await redis.get(cacheKey)
+    if (cachedQuoteStr) {
+      logger.info(`Returning cached shipping quote for key: ${cacheKey}`)
+      return JSON.parse(cachedQuoteStr)
+    }
+  } catch (cacheErr) {
+    logger.error("Failed to fetch shipping quote from Redis cache:", cacheErr)
+  }
+
   // 1. Fallback for International deliveries
   if (country.toLowerCase() !== "india") {
     logger.info(`International delivery requested for ${country}. Applying flat international shipping rate.`)
@@ -104,12 +114,20 @@ export const calculateShippingQuote = async (
             )
 
             logger.info(`Shiprocket carrier selected: ${cheapest.courier_name} (Rate: ₹${cheapest.rate})`)
-            return {
+            const result = {
               courierName: cheapest.courier_name,
               rate: parseFloat(cheapest.rate),
               etd: cheapest.etd || "4-7 business days",
               serviceabilityId: cheapest.id
             }
+
+            try {
+              await redis.setex(cacheKey, 300, JSON.stringify(result)) // Cache for 5 minutes
+            } catch (cacheErr) {
+              logger.error("Failed to write shipping quote to Redis cache:", cacheErr)
+            }
+
+            return result
           }
         }
       } else {
@@ -123,12 +141,20 @@ export const calculateShippingQuote = async (
 
   // 3. Graceful fallback rates if Shiprocket fails or is unconfigured
   logger.info("Applying flat-rate domestic shipping fallback.")
-  return {
+  const fallbackResult = {
     courierName: "Express Domestic Shipping",
     rate: 150.0,
     etd: "4-7 business days",
     serviceabilityId: 0
   }
+
+  try {
+    await redis.setex(cacheKey, 300, JSON.stringify(fallbackResult)) // Cache fallback rate too
+  } catch (cacheErr) {
+    logger.error("Failed to write shipping quote to Redis cache:", cacheErr)
+  }
+
+  return fallbackResult
 }
 
 // Books a package delivery shipment in the Shiprocket dashboard

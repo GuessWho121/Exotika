@@ -160,7 +160,7 @@ export function SearchPage() {
                     image={product.imageUrl}
                     description={product.description}
                     aspectRatio="square"
-                    category={product.category?.toLowerCase() as any}
+                    category={product.category?.toLowerCase().replace(/_/g, "-") as any}
                     inStock={product.inStock}
                   />
                 ))}

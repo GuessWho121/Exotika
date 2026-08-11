@@ -148,8 +148,8 @@ export const getCustomOrders = async (
     }
 
     const { page = "1", limit = "10" } = req.query
-    const pageNumber = parseInt(page as string, 10)
-    const limitNumber = parseInt(limit as string, 10)
+    const pageNumber = Math.max(1, parseInt(page as string, 10) || 1)
+    const limitNumber = Math.min(100, Math.max(1, parseInt(limit as string, 10) || 10))
     const skip = (pageNumber - 1) * limitNumber
 
     const where: any = {}

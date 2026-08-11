@@ -14,7 +14,7 @@ import {
   createProductSchema,
   updateProductSchema
 } from "../schemas/product.schema.js"
-import { authenticate, requireAdmin } from "../middleware/authMiddleware.js"
+import { authenticate, optionalAuthenticate, requireAdmin } from "../middleware/authMiddleware.js"
 import { validateRequest } from "../middleware/validateMiddleware.js"
 import { reviewLimiter } from "../middleware/securityMiddleware.js"
 
@@ -23,7 +23,7 @@ const router = Router()
 // Favorites (Must reside before /:id parameter matching)
 router.get("/user/favorites", authenticate as any, getUserFavorites as any)
 
-router.get("/", getProducts)
+router.get("/", optionalAuthenticate as any, getProducts)
 router.get("/:id", getProductById)
 router.post("/:id/favorite", authenticate as any, toggleProductFavorite as any)
 
