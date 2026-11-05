@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect } from "react"
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle, ShoppingBag } from 'lucide-react'
 import { useNotifications, type Notification } from "../contexts/NotificationContext"

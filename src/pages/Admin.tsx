@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { Package, ShoppingCart, Palette, BarChart3, Eye } from 'lucide-react'
 import { useAdmin } from "../contexts/AdminContext"

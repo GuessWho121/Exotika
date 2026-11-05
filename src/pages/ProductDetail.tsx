@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
 import { Heart, ShoppingCart, Star, Truck, Shield, RotateCcw, Share2, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'

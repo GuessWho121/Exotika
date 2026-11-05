@@ -47,3 +47,14 @@ coverage/
 # For any local Docker volumes or build caches that might appear outside of node_modules/dist:
 .docker_build_cache/
 .docker_volumes/
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/
+
+# Agent instructions
+AGENTS.md
+GEMINI.md
+.agents/
+
+.ignore
+*.ignore

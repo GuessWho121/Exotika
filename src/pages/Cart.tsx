@@ -1,4 +1,3 @@
-"use client"
 import { useNavigate } from "react-router-dom"
 import { Plus, Minus, Trash2 } from 'lucide-react'
 import { useCart } from "../contexts/CartContext"

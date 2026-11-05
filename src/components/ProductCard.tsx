@@ -1,5 +1,3 @@
-"use client"
-
 import { memo } from 'react'
 import { Heart } from 'lucide-react'
 import { useNavigate } from "react-router-dom"

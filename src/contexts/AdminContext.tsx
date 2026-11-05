@@ -1,5 +1,3 @@
-"use client"
-
 import type React from "react"
 import { createContext, useContext, useReducer, useEffect, type ReactNode, useCallback } from "react"
 import { useNotifications } from "./NotificationContext"

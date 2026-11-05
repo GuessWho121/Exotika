@@ -1,5 +1,3 @@
-"use client"
-
 import type React from "react"
 import { createContext, useContext, useReducer, useEffect, useState, useRef, type ReactNode } from "react"
 import { useAdmin } from "./AdminContext"

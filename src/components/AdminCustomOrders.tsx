@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { Eye, Palette, ImageIcon, Download, X, Mail, Phone, MessageCircle } from 'lucide-react'
 import { useAdmin, type CustomOrder } from "../contexts/AdminContext"

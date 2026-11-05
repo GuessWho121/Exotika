@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react" // Import useEffect
 import { Link, useNavigate } from "react-router-dom"
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
